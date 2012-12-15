@@ -19,7 +19,11 @@ ENT.AdminSpawnable		= false
 function ENT:GetLinkTable()
 	return {
 		Orientation = function()
-			return self:GetAngles()
+			return self:GetAngles() + self:LocalToWorldAngles(Angle(0, 180, 0))
+		end,
+		AngleVelocity = function()
+			local ret = self:GetPhysicsObject():GetAngleVelocity()
+			return Angle(ret.x, ret.z, ret.y)
 		end
 	}
 end

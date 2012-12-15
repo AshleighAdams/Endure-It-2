@@ -47,10 +47,10 @@ function ENT:Setup(code, name)
 	
 	self:Reset()
 	
-	local func = CompileString(code, name)
+	local func,err = CompileString(code, name, false)
 	
 	if type(func) == "string" or func == nil then
-		self.Owner:ChatPrint(func)
+		self.Owner:ChatPrint((func or err) or "unknown error")
 		self:SetColor(Color(255, 0, 0))
 		return
 	end
@@ -133,11 +133,14 @@ end
 function ENT:Think()
 	if self.Crashed then return end
 	if CLIENT then return end
-
+	
 	if not self.Enviroment.Think then
 		return
 	end
-
+	
+	--print(CurTime())
+	self:NextThink(CurTime())
+	
 	debug.sethook(function()
 		error("quota exceeded")
 		self.Crashed = true
@@ -152,6 +155,8 @@ function ENT:Think()
 		self.Owner:ChatPrint(err)
 		self.Crashed = true
 	end
+	
+	return true
 end
 
 function ENT:Sandboxed_GetLink(name)
