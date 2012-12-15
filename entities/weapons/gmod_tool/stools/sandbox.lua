@@ -11,6 +11,7 @@ if CLIENT then
 	language.Add("tool.sandbox.name", "Sandbox")
 	language.Add("tool.sandbox.desc", "Create a sandbox CPU")
 	language.Add("tool.sandbox.0", "Left click to attach a CPU, Right click to upload code")
+	language.Add("Undone_Sandbox", "Undone Sandbox")
 end
 
 cleanup.Register( "sandbox" )
@@ -44,7 +45,7 @@ function TOOL:RightClick(trace)
 end
 
 function TOOL:RightClick_Old( trace )
-
+	
 	if ( IsValid( trace.Entity ) && trace.Entity:IsPlayer() ) then return false end
 	
 	if CLIENT then
@@ -52,13 +53,26 @@ function TOOL:RightClick_Old( trace )
 		return true
 	end
 	
+	local model				= self:GetClientInfo( "model" )
+	local filename			= self:GetClientInfo( "file" )
+	
+	if IsValid(trace.Entity) and trace.Entity.Owner == self:GetOwner() and trace.Entity:GetClass() == "ei_sandbox" then
+		local code = (self:GetOwner().Programs or {})[filename]
+	
+		if code == nil then
+			self:GetOwner():ChatPrint("That file hasn't been uploaded yet!")
+			return false
+		end
+		
+		trace.Entity:Setup(code)
+		
+		return true
+	end
+	
 	if ( !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return false end
 	
 	local ply = self:GetOwner()
 	
-	local model				= self:GetClientInfo( "model" )
-	local filename			= self:GetClientInfo( "file" )
-
 	if ( !self:GetSWEP():CheckLimit( "sandbox" ) ) then return false end
 
 	if (not util.IsValidModel(model)) then return false end
@@ -74,25 +88,6 @@ function TOOL:RightClick_Old( trace )
 		return false
 	end
 	
-	local oldcode = [[
-self.CreateLink("gyro", "ei_sensor_")
-self.gyro = self.GetLink("gyro")
-
-self.NextPrint = CurTime()
-
-function Think()
-	if CurTime() > self.NextPrint then
-		self.NextPrint = CurTime() + 5
-		
-		if not self.gyro.Connected then
-			print("gyro not connected...")
-			return
-		end
-		print(self.gyro.Invoke("Orientation"))
-	end
-end
-	]]
-
 	chip = MakeSandbox( ply, model, Ang, trace.HitPos, code)
 	
 	local min = chip:OBBMins()
