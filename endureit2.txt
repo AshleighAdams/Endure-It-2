@@ -1,0 +1,8 @@
+"endureit2"
+{
+	"base"		"sandbox"
+	"title"		"Endure It 2"
+	"maps"		"^sb_"
+	"menusystem"	"1"
+	"workshopid"	"N/A"
+}
