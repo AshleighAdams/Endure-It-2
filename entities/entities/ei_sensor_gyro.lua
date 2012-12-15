@@ -1,11 +1,14 @@
 AddCSLuaFile()
-DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName		= "Gyroscope"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "Sensor for the Sandbox CPU"
 ENT.Instructions	= ""
+ENT.RenderGroup 	= RENDERGROUP_OPAQUE
+
+ENT.Linkable		= true
+ENT.Base 			= "base_gmodentity"
 
 ENT.Model 			= "models/props_lab/huladoll.mdl"
 
@@ -25,6 +28,24 @@ function ENT:Initialize()
 	self:SetModel(self.Model)
 end
 
+function ENT:SpawnFunction( ply, tr, ClassName )
+
+	if ( !tr.Hit ) then return end
+	
+	local SpawnPos = tr.HitPos + tr.HitNormal * 10
+	local SpawnAng = ply:EyeAngles()
+	SpawnAng.p = 0
+	SpawnAng.y = SpawnAng.y + 180
+	
+	local ent = ents.Create( ClassName )
+		ent:SetPos( SpawnPos )
+		ent:SetAngles( SpawnAng )
+	ent:Spawn()
+	ent:Activate()
+	
+	return ent
+	
+end
 
 function ENT:BaseGetLinkTable()
 	local tbl = self:GetLinkTable()

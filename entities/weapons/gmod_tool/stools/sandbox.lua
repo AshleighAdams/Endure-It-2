@@ -7,12 +7,51 @@ TOOL.ConfigName		= ""
 TOOL.ClientConVar[ "model" ]			= "models/hunter/plates/plate.mdl"
 TOOL.ClientConVar[ "file" ]				= "sandbox.lua"
 
+if CLIENT then
+	language.Add("tool.sandbox.name", "Sandbox")
+	language.Add("tool.sandbox.desc", "Create a sandbox CPU")
+	language.Add("tool.sandbox.0", "Left click to attach a CPU, Right click to upload code")
+end
+
 cleanup.Register( "sandbox" )
 
-function TOOL:RightClick( trace )
+if SERVER then
+	util.AddNetworkString("sandbox_upload")
+	
+	net.Receive("sandbox_upload", function(len, pl)
+		local name = net.ReadString()
+		local code = net.ReadString()
+		pl.Programs = pl.Programs or {}
+		
+		pl.Programs[name] = code
+		
+		pl:ChatPrint("Recived program " .. name)
+	end)
+end
+
+function TOOL:RightClick(trace)
+	if SERVER then return false end
+	
+	local f = self:GetClientInfo("file")
+	local code = file.Read(f, "DATA") or ""
+	
+	net.Start("sandbox_upload")
+		net.WriteString(f)
+		net.WriteString(code)
+	net.SendToServer()
+	
+	return false
+end
+
+function TOOL:RightClick_Old( trace )
 
 	if ( IsValid( trace.Entity ) && trace.Entity:IsPlayer() ) then return false end
-	if ( CLIENT ) then return true end
+	
+	if CLIENT then
+		// semd the server the code
+		return true
+	end
+	
 	if ( !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return false end
 	
 	local ply = self:GetOwner()
@@ -28,19 +67,30 @@ function TOOL:RightClick( trace )
 	local Ang = trace.HitNormal:Angle()
 	Ang.pitch = Ang.pitch + 90
 	
-	local code = [[
-		self.CreateLink("sensor", "ei_sensor_")
-		self.gyro = self.GetLink("sensor")
+	local code = (self:GetOwner().Programs or {})[filename]
+	
+	if code == nil then
+		self:GetOwner():ChatPrint("That file hasn't been uploaded yet!")
+		return false
+	end
+	
+	local oldcode = [[
+self.CreateLink("gyro", "ei_sensor_")
+self.gyro = self.GetLink("gyro")
+
+self.NextPrint = CurTime()
+
+function Think()
+	if CurTime() > self.NextPrint then
+		self.NextPrint = CurTime() + 5
 		
-		self.NextPrint = CurTime()
-		
-		function Think()
-			if CurTime() > self.NextPrint then
-				self.NextPrint = CurTime() + 5
-				
-				print(self.gyro.Connected)
-			end
+		if not self.gyro.Connected then
+			print("gyro not connected...")
+			return
 		end
+		print(self.gyro.Invoke("Orientation"))
+	end
+end
 	]]
 
 	chip = MakeSandbox( ply, model, Ang, trace.HitPos, code)
@@ -63,7 +113,7 @@ end
 
 function TOOL:LeftClick( trace )
 
-	local bool, chip, set_key = self:RightClick( trace, true )
+	local bool, chip, set_key = self:RightClick_Old( trace, true )
 	if ( CLIENT ) then return bool end
 
 	if ( set_key ) then return true end
@@ -122,7 +172,7 @@ if (SERVER) then
 		
 	end
 	
-	duplicator.RegisterEntityClass( "ei_sandbox", MakeSandbox, "Model", "Ang", "Pos", "key", "description", "toggle", "Vel", "aVel", "frozen" )
+	duplicator.RegisterEntityClass( "ei_sandbox", MakeSandbox, "Model", "Ang", "Pos", "code", "frozen" )
 
 end
 
@@ -144,16 +194,16 @@ function TOOL.BuildCPanel( CPanel )
 	local CVars = { "sandbox_model", "sandbox_file"}
 	
 	CPanel:AddControl( "ComboBox", { Label = "#tool.presets",
-									 MenuButton = 1,
-									 Folder = "sandbox",
-									 Options = Options,
-									 CVars = CVars } )
-									 							
-									 
+		MenuButton = 1,
+		Folder = "sandbox",
+		Options = Options,
+		CVars = CVars } )
+	
+	
 	CPanel:AddControl( "TextBox", { Label = "File",
-									 MaxLenth = "20",
-									 Command = "sandbox_file" } )
-									
+		MaxLenth = "20",
+		Command = "sandbox_file" } )
+	
 end
 
 

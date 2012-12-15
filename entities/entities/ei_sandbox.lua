@@ -1,6 +1,6 @@
 
 AddCSLuaFile()
-DEFINE_BASECLASS( "base_gmodentity" )
+--DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName			= "Lua Sandbox"
 ENT.Author				= "C0BRA"
@@ -8,6 +8,7 @@ ENT.Contact				= "c0bra@xiatek.org"
 ENT.Spawnable			= false
 ENT.AdminSpawnable		= false
 ENT.RenderGroup 		= RENDERGROUP_OPAQUE
+ENT.Base				= "base_gmodentity"
 
 ENT.Model				= "models/hunter/plates/plate.mdl"
 ENT.Links 				= {}
@@ -48,7 +49,7 @@ function ENT:Setup(code, name)
 	
 	local func = CompileString(code, name)
 	
-	if type(func) == "string" then
+	if type(func) == "string" or func == nil then
 		self.Owner:ChatPrint(func)
 		self:SetColor(Color(255, 0, 0))
 		return
@@ -178,12 +179,19 @@ function ENT:Sandboxed_CreateLink(name, asserter)
 	
 	link.Meta = {
 		__index = function(tbl, k)
-			print("index: " .. k)
+			--print("index: " .. k)
 			
 			if k == "Connected" then
 				return IsValid(link.Entity)
 			elseif k == "Invoke" then
 				if not IsValid(link.Entity) then return nil end
+				
+				return function(name, ...)
+					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
+					
+					local tbl = link.Entity:GetLinkTable()
+					return tbl[name](...)
+				end
 			end
 			
 			if IsValid(link.Entity) then
