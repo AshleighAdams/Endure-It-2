@@ -9,7 +9,7 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_linkable_ent"
 
-ENT.Model 			= "models/props_lab/huladoll.mdl"
+ENT.Model 			= "models/bull/various/gyroscope.mdl"
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
@@ -19,7 +19,7 @@ ENT.AdminSpawnable		= false
 function ENT:GetLinkTable()
 	return {
 		Orientation = function()
-			return self:GetAngles() + self:LocalToWorldAngles(Angle(0, 180, 0))
+			return self:GetAngles()
 		end,
 		AngleVelocity = function()
 			local ret = self:GetPhysicsObject():GetAngleVelocity()
@@ -31,6 +31,24 @@ end
 function ENT:OnRemove()
 end
 
+function ENT:Think()
+	self.BaseClass.Think(self)
+	
+	if CLIENT then
+		local model = self:GetModel()
+
+		if model == "models/bull/various/gyroscope.mdl" then
+
+			local lineOfNodes = self:WorldToLocal( ( Vector(0,0,1):Cross( self:GetUp() ) ):GetNormal( ) + self:GetPos() )
+
+			self:SetPoseParameter( "rot_yaw"  ,  math.deg( math.atan2( lineOfNodes[2] , lineOfNodes[1] ) ) )
+			self:SetPoseParameter( "rot_roll" , -math.deg( math.acos( self:GetUp():DotProduct( Vector(0,0,1) ) )  or 0 ) )
+		end
+	end
+	
+	self:NextThink(CurTime()+0.04)
+	return true
+end
 
 function ENT:OnTakeDamage(dmginfo)
 end
