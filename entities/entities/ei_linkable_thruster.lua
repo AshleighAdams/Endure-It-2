@@ -82,18 +82,23 @@ function ENT:Initialize()
 		self.ThrustOffsetR 	= Vector( 0, 0, min.z )
 		self.ForceAngle		= self.ThrustOffset:GetNormalized() * -1
 		
-		self:SetForce( 2000 )
-		
 		self:SetEffect( "plasma" )
 		self:SetSound( "k_lab.ringsrotating" )
-
+		
+		self:Switch(true)
+		self:Switch(false)
+	
+		self:SetForce( 1000 )
+	
 		self:SetOffset( self.ThrustOffset )
 		self:StartMotionController()
 		
 		self:Switch( false )
-		self.ActivateOnDamage = true
+		self.ActivateOnDamage = false
 		
 		self.SoundName = Sound( "k_lab.ringsrotating" )
+		
+		
 		
 	end
 
@@ -126,9 +131,17 @@ function ENT:DrawTranslucent()
 	
 end
 
-
+//ENT.NextSoundSet = 0
 function ENT:Think()
-
+	/*if CurTime() > self.NextSoundSet then
+		self.NextSoundSet = CurTime() + 1
+		
+		if self.Sound and self:IsOn() then
+			//self.Sound:ChangeVolume(self.force / 1000, 0.25)
+			print(self.force / 1000, SERVER)
+		end
+	end
+	*/
 	self.BaseClass.Think( self )
 	
 	if ( CLIENT ) then
@@ -205,26 +218,30 @@ function ENT:EffectDraw_plasma()
 	
 	scroll = scroll * 0.9
 	
+	local len = self:PlasmaSize()
+	
+	local width = math.Clamp(len / 4, 0, 16)
+	
 	render.StartBeam( 3 )
-		render.AddBeam( vOffset, 16, scroll, Color( 0, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 8, 16, scroll + 0.01, Color( 255, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 64, 16, scroll + 0.02, Color( 0, 255, 255, 0) )
+		render.AddBeam( vOffset, width, scroll, Color( 0, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len/8, width, scroll + 0.01, Color( 255, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len, width, scroll + 0.02, Color( 0, 255, 255, 0) )
 	render.EndBeam()
 	
 	scroll = scroll * 0.9
 	
 	render.StartBeam( 3 )
-		render.AddBeam( vOffset, 16, scroll, Color( 0, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 8, 16, scroll + 0.01, Color( 255, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 64, 16, scroll + 0.02, Color( 0, 255, 255, 0) )
+		render.AddBeam( vOffset, width, scroll, Color( 0, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len/8, width, scroll + 0.01, Color( 255, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len, width, scroll + 0.02, Color( 0, 255, 255, 0) )
 	render.EndBeam()
 	
 	scroll = scroll * 0.9
 	
 	render.StartBeam( 3 )
-		render.AddBeam( vOffset, 16, scroll, Color( 0, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 8, 16, scroll + 0.01, Color( 255, 255, 255, 255) )
-		render.AddBeam( vOffset + vNormal * 64, 16, scroll + 0.02, Color( 0, 255, 255, 0) )
+		render.AddBeam( vOffset, width, scroll, Color( 0, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len/8, width, scroll + 0.01, Color( 255, 255, 255, 255) )
+		render.AddBeam( vOffset + vNormal * len, width, scroll + 0.02, Color( 0, 255, 255, 0) )
 	render.EndBeam()
 	
 end
@@ -346,9 +363,10 @@ end
    Name: SetForce
 -----------------------------------------------------------]]
 function ENT:SetForce( force, mul )
-
 	if (force) then	self.force = force end
 	mul = mul or 1
+	
+	self:SetNWFloat("force", force)
 	
 	local phys = self:GetPhysicsObject()
 	if (!phys:IsValid()) then 
@@ -376,6 +394,17 @@ function ENT:SetForce( force, mul )
 	
 	self:SetOverlayText( "Force: " .. math.floor( self.force ) )
 	
+	if self:IsOn() then
+		self.Sound:ChangeVolume(self.force / 1000, 0.25)
+		
+		
+		
+	end
+	
+	local p = (self.force / 1000)
+	p = (math.Clamp(p, 0, 1) * 25) + 100
+	self.Sound:ChangePitch(p, 0.25)
+
 end
 
 
@@ -411,30 +440,43 @@ end
 function ENT:Use( activator, caller )
 end
 
+function ENT:PlasmaSize()
+	return self:GetNWFloat("force", 10) / 10
+end
+
 function ENT:PhysicsSimulate( phys, deltatime )
-
 	if (!self:IsOn()) then return SIM_NOTHING end
-	
 	local ForceAngle, ForceLinear = self.ForceAngle, self.ForceLinear
-
-	return ForceAngle, ForceLinear, SIM_LOCAL_ACCELERATION
 	
+	if SERVER then
+		local tr = util.QuickTrace(self:GetPos() + self:GetAngles():Up() * 10, 
+			self:GetAngles():Up() * (self:PlasmaSize()),
+			self)
+		if IsValid(tr.Entity) then
+			if tr.Entity.LastBurn and (CurTime() - tr.Entity.LastBurn) > 1 then
+				tr.Entity:Extinguish()
+				tr.Entity.LastBurn = CurTime()
+			elseif tr.Entity.LastBurn == nil then
+				tr.Entity.LastBurn = CurTime()
+			end
+			
+			tr.Entity:Ignite(1, 0)
+		end
+	end
+	
+	return ForceAngle, ForceLinear, SIM_LOCAL_ACCELERATION
 end
 
 function ENT:Switch( on )
-	
 	if (!self:IsValid()) then return false end
+	if self:IsOn() == on then return end
 	
 	self:SetOn( on )
 	
 	if (on) then 
-	
 		self:StartThrustSound()
-		
 	else
-		
 		self:StopThrustSound()
-		
 	end
 	
 	local phys = self:GetPhysicsObject()
@@ -481,10 +523,10 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		SetEnabled = function(en)
-			self:Switch(en)
-		end,
 		SetThrust = function(thrust)
+			thrust = math.max(0, thrust)
+			
+			self:Switch(thrust > 0)
 			self:SetForce(thrust)
 		end
 	}

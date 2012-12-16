@@ -16,6 +16,13 @@ AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 ENT.Spawnable			= true
 ENT.AdminSpawnable		= false
 
+function ENT:Initialize()
+	self.BaseClass.Initialize(self)
+	if SERVER then
+		self:GetPhysicsObject():SetMass(250)
+	end
+end
+
 function ENT:GetLinkTable()
 	return {
 		Pitch = function(val)

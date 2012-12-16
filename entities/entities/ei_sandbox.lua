@@ -47,6 +47,14 @@ function ENT:Setup(code, name)
 	
 	self:Reset()
 	
+
+	local infloop = code:match("do%W+end")
+	if infloop then
+		self.Owner:ChatPrint("Please remove redundant `do end'")
+		self:SetColor(Color(255, 0, 0))
+		return
+	end
+	
 	local func,err = CompileString(code, name, false)
 	
 	if type(func) == "string" or func == nil then
