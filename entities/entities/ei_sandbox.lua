@@ -181,14 +181,7 @@ function ENT:Sandboxed_GetLink(name)
 end
 
 function ENT:Sandboxed_CreateLink(name, asserter)
-	if type(asserter) == "string" then
-		local asserter_str = asserter
-		asserter = function(e)
-			return string.match(e:GetClass(), asserter_str) != nil
-		end
-	end
-
-	local link = {Name = name, Asserter = asserter, Entity = nil}
+	local link = {Name = name, Entity = nil}
 	
 	link.Meta = {
 		__index = function(tbl, k)
@@ -220,7 +213,27 @@ function ENT:Sandboxed_CreateLink(name, asserter)
 	
 	self.Links[name] = link
 	
+	self:SendUpdatedLinkTable()
+	
 	return nil
+end
+
+function ENT:SendUpdatedLinkTable()
+	net.Start("ei_sandbox_links")
+		net.WriteEntity(self)
+		net.WriteTable(self.Links)
+	net.Send(player.GetAll())
+end
+
+if SERVER then
+	util.AddNetworkString("ei_sandbox_links")
+else
+	net.Receive("ei_sandbox_links", function()
+		local e = net.ReadEntity()
+		local tbl = net.ReadTable()
+		
+		e.Links = tbl
+	end)
 end
 
 function ENT:OnTakeDamage(dmginfo)
