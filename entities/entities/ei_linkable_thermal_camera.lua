@@ -100,16 +100,16 @@ function ENT:GetLinkTable()
 					local size = (v:OBBMaxs() - v:OBBMins()):Length()
 					local dist =  (pos-selfpos):Length()
 					size = (1/math.log10(dist) * size) / fov -- approx
-					
-					print(size)
-					
+										
 					for xx = math.Round(x - size/2), math.Round(x + size / 2) do
 						for yy = math.Round(y - size/2), math.Round(y + size / 2) do
 							
 							if xx < 0 or yy < 0 then continue end
 							if xx > resx or yy > resy then continue end
 							
-							ret[xx][yy] = ret[xx][yy] + 1
+							if ret[xx][yy] != nil then
+								ret[xx][yy] = ret[xx][yy] + math.Round((5000 / dist) * size)
+							end
 						end
 					end
 					

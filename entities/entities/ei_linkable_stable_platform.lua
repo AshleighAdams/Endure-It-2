@@ -9,7 +9,7 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_linkable_ent"
 
-ENT.Model 			= "models/hunter/blocks/cube025x025x025.mdl"
+ENT.Model 			= "models/Mechanics/robotics/a3.mdl" -- "models/hunter/blocks/cube025x025x025.mdl"
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
