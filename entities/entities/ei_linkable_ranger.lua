@@ -35,23 +35,27 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Query = function(x, y)
+		Query = function(x, y, onlymetal)
 			x = x or 0
 			y = y or 0
-			
+						
 			local trace = {}
 			trace.start = self:GetPos() + self:GetUp() * 2
 			
 			local ang = self:GetUp():Angle()
 			
-			ang:RotateAroundAxis(self:GetRight(), x)
-			ang:RotateAroundAxis(self:GetForward(), y)
-			
+			ang:RotateAroundAxis(self:GetRight(), x / 1.325)
+			ang:RotateAroundAxis(self:GetForward(), y / 1.325)
 			
 			trace.endpos = trace.start + ang:Forward() * 1000000
 			
 			trace.filter = { self }
 			local tr = util.TraceLine(trace)
+			
+			if tr.HitSky or (tr.HitWorld and onlymetal) then
+				debugoverlay.Line(trace.start, tr.HitPos, 0.25)
+				return 1000000
+			end
 			
 			for k,v in pairs(ents.FindByClass("ei_linkable_geigercounter")) do
 				local dist = v:GetPos():Distance(tr.HitPos)
@@ -60,7 +64,6 @@ function ENT:GetLinkTable()
 				
 				if math.random(0, dist) < 250 then
 					rand = 1
-					print("ASD")
 				end
 				
 				dist = v:GetPos():Distance(trace.start)
@@ -83,7 +86,7 @@ function ENT:GetLinkTable()
 				end
 			end
 			
-			debugoverlay.Line(trace.start, tr.HitPos, 0.02)
+			debugoverlay.Line(trace.start, tr.HitPos, 0.25)
 			
 			return (trace.start - tr.HitPos):Length()
 		end

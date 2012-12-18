@@ -13,7 +13,7 @@ ENT.Base				= "base_gmodentity"
 ENT.Model				= "models/hunter/plates/plate.mdl"
 ENT.Links 				= {}
 ENT.Crashed				= false
-ENT.Quota 				= 10000
+ENT.Quota 				= 1000000
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
