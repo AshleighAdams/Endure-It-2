@@ -42,11 +42,46 @@ function ENT:Reset()
 	self.Crashed = false
 end
 
+function ENT:PreEntityCopy()
+	if CLIENT then return end
+	local info = {}
+	
+	info.Code = self.Code
+	info.CodeName = self.CodeName
+	
+	info.Links = {}
+	
+	for k,v in pairs(self.Links) do
+		info.Links[k] = v.Entity:EntIndex()
+	end
+	
+	duplicator.StoreEntityModifier(self, "CodeAndLinks", dupeInfo)
+end
+
+function ENT:PostEntityPaste(pl, ent, CreatedEntities)
+	if CLIENT then return end
+	if not ent.EntityMods then return end
+	
+	local tbl = ent.EntityMods["CodeAndLinks"]
+	
+	if not tbl then return end
+	
+	self:Setup(tbl.Code or "error('empty code')", tbl.CodeName)
+	
+	for k,v in pairs(tbl.Links) do
+		self:Sandboxed_CreateLink(k).Entity = CreatedEntities[v]
+	end
+	
+	self:SendUpdatedLinkTable()
+	//function ENT:Sandboxed_CreateLink(name)
+end
+
 function ENT:Setup(code, name)
 	name = "ei_sandbox_" .. (name or "unknown")
 	
 	self:Reset()
-	
+	self.Code = code
+	self.CodeName = name
 
 	local infloop = code:match("do%W+end")
 	if infloop then
@@ -180,7 +215,9 @@ function ENT:Sandboxed_GetLink(name)
 	return ret
 end
 
-function ENT:Sandboxed_CreateLink(name, asserter)
+function ENT:Sandboxed_CreateLink(name)
+	if self.Links[name] != nil then return self.Links[name] end -- this link has already been made
+	
 	local link = {Name = name, Entity = nil}
 	
 	link.Meta = {
@@ -215,7 +252,7 @@ function ENT:Sandboxed_CreateLink(name, asserter)
 	
 	self:SendUpdatedLinkTable()
 	
-	return nil
+	return link
 end
 
 function ENT:SendUpdatedLinkTable()
