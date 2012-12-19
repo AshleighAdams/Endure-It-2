@@ -46,7 +46,7 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Fire = function()
+		Fire = function(chip)
 			// Create an explosion
 			-- TODO
 			local vPoint = self:GetPos()

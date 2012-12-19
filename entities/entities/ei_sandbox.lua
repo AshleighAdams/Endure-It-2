@@ -233,7 +233,7 @@ function ENT:Sandboxed_CreateLink(name)
 					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
 					
 					local tbl = link.Entity:GetLinkTable()
-					return tbl[name](...)
+					return tbl[name](self, ...)
 				end
 			end
 			

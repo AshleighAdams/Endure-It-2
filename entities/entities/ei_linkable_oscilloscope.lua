@@ -126,7 +126,7 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Draw = function(x, y, intensity)
+		Draw = function(chip, x, y, intensity)
 			x = x or 0
 			y = y or 0
 			self.LastX = self.LastX or x

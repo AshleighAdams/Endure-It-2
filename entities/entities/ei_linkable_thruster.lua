@@ -446,9 +446,28 @@ end
 
 function ENT:PhysicsSimulate( phys, deltatime )
 	if (!self:IsOn()) then return SIM_NOTHING end
+	if not IsValid(self.Chip) then
+		self:Switch(false)
+		return SIM_NOTHING
+	end
+	
+	local found = false
+	for k,v in pairs(self.Chip.Links) do
+		if IsValid(v.Entity) and v == self then
+			found = true
+			break
+		end
+	end
+	
+	if not found then
+		self.Chip = nil
+		self:Switch(false)
+		return SIM_NOTHING
+	end
+	
 	local ForceAngle, ForceLinear = self.ForceAngle, self.ForceLinear
 	
-	if SERVER then
+	if SERVER and self:GetNWFloat("force") > 250 then
 		local tr = util.QuickTrace(self:GetPos() + self:GetAngles():Up() * 10, 
 			self:GetAngles():Up() * (self:PlasmaSize()),
 			self)
@@ -523,7 +542,7 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		SetThrust = function(thrust)
+		SetThrust = function(chip, thrust)
 			thrust = math.max(0, thrust)
 			
 			self:Switch(thrust > 0)

@@ -26,7 +26,7 @@ function ENT:Draw()
 end
 
 function ENT:Think()
-	self.BaseClass.Think( self )
+	self.BaseClass.Think(self)
 	if SERVER then
 		
 		if math.random(0, 500) == 1 then

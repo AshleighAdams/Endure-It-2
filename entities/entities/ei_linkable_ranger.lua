@@ -35,7 +35,7 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Query = function(x, y, onlymetal)
+		Query = function(chip, x, y, onlymetal)
 			x = x or 0
 			y = y or 0
 						

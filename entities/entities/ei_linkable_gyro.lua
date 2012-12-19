@@ -18,10 +18,10 @@ ENT.AdminSpawnable		= false
 
 function ENT:GetLinkTable()
 	return {
-		Orientation = function()
+		Orientation = function(chip)
 			return self:GetAngles()
 		end,
-		AngleVelocity = function()
+		AngleVelocity = function(chip)
 			local ret = self:GetPhysicsObject():GetAngleVelocity()
 			return Angle(ret.x, ret.z, ret.y)
 		end

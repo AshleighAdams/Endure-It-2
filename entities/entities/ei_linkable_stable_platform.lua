@@ -25,19 +25,19 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Pitch = function(val)
+		Pitch = function(chip, val)
 			--val = val * self:GetPhysicsObject():GetMass()
 			self:GetPhysicsObject():AddAngleVelocity(Vector(val, 0, 0))
 		end,
-		Yaw = function(val)
+		Yaw = function(chip, val)
 			--val = val * self:GetPhysicsObject():GetMass()
 			self:GetPhysicsObject():AddAngleVelocity(Vector(0, 0, val))
 		end,
-		Roll = function(val)
+		Roll = function(chip, val)
 			--val = val * self:GetPhysicsObject():GetMass()
 			self:GetPhysicsObject():AddAngleVelocity(Vector(0, val, 0))
 		end,
-		Friction = function(val)
+		Friction = function(chip, val)
 			local po = self:GetPhysicsObject()
 			val = math.Clamp(val, 0, 1)
 			po:AddAngleVelocity(-po:GetAngleVelocity() * val)

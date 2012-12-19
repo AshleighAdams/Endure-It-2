@@ -54,7 +54,7 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Query = function(fov, resx, resy)
+		Query = function(chip, fov, resx, resy)
 			local ret = {}
 			
 			for x = 0, resy do

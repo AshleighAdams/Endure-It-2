@@ -18,6 +18,7 @@ ENT.AdminSpawnable		= false
 
 function ENT:Initialize()
 	self:SetModel(self.Model)
+	self.Links = {}
 	
 	if SERVER then
 		self:PhysicsInit( SOLID_VPHYSICS )
