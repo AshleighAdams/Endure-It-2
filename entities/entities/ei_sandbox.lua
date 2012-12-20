@@ -11,8 +11,6 @@ ENT.RenderGroup 		= RENDERGROUP_OPAQUE
 ENT.Base				= "base_gmodentity"
 
 ENT.Model				= "models/hunter/plates/plate.mdl"
-ENT.Links 				= {}
-ENT.Crashed				= false
 ENT.Quota 				= 1000000
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
@@ -29,8 +27,37 @@ function ENT:Initialize()
 		self:SetSolid( SOLID_VPHYSICS )
 	end
 	
+	self.Links = {}
+	self.PowerSources = {}
+	self.Crashed = false
+	
 	self:SetModel(self.Model)
+end
 
+function ENT:GetWatts(watt)
+	local totalwatt = 0
+	
+	for k,src in pairs(self.PowerSources) do
+		totalwatt = totalwatt + src:MaxWatt() /* returns the bandwidth, or the avaibible power if less than bandwidth */
+	end
+	
+	if totalwatt < watt then
+		return 0
+	end
+	
+	local ret = 0
+	
+	for k,src in pairs(self.PowerSources) do
+		local max = src:MaxWatt()
+		local percent = max / totalwatt
+		
+		local watt_used = watt * percent
+		
+		self:TakeWatt(watt_used)
+		ret = ret + watt_used
+	end
+	
+	return ret
 end
 
 function ENT:OnRemove()
