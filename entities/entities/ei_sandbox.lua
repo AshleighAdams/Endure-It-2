@@ -38,17 +38,20 @@ function ENT:GetWatts(watt)
 	local totalwatt = 0
 	
 	for k,src in pairs(self.PowerSources) do
+		if not IsValid(src) then continue end
 		totalwatt = totalwatt + src:MaxWatt() /* returns the bandwidth, or the avaibible power if less than bandwidth */
 	end
 	
 	if totalwatt < watt then
-		return 0
+		return false
 	end
 	
 	local ret = 0
 	
 	for k,src in pairs(self.PowerSources) do
-		local max = src:MaxWatt()
+		if not IsValid(src) then continue end
+		
+		local max = src:MaxWatt() 
 		local percent = max / totalwatt
 		
 		local watt_used = watt * percent
@@ -57,7 +60,7 @@ function ENT:GetWatts(watt)
 		ret = ret + watt_used
 	end
 	
-	return ret
+	return true
 end
 
 function ENT:OnRemove()
