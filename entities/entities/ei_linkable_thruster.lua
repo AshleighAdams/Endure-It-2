@@ -445,15 +445,28 @@ function ENT:PlasmaSize()
 end
 
 function ENT:PhysicsSimulate( phys, deltatime )
-	if (!self:IsOn()) then return SIM_NOTHING end
+	--if (!self:IsOn()) then return SIM_NOTHING end
+	
 	if not IsValid(self.Chip) then
 		self:Switch(false)
 		return SIM_NOTHING
 	end
 	
+	if self.force != 0 and not self:IsOn() then
+		if self.Chip:GetWatts(self.force / 1000) then
+			self:Switch(true)
+		end
+	elseif self.force != 0 and self:IsOn() then
+		if not self.Chip:GetWatts(self.force / 1000) then
+			self:Switch(false)
+		end
+	end
+		
+	if (!self:IsOn()) then return SIM_NOTHING end
+	
 	local found = false
 	for k,v in pairs(self.Chip.Links) do
-		if IsValid(v.Entity) and v == self then
+		if IsValid(v.Entity) and v.Entity == self then
 			found = true
 			break
 		end
@@ -462,6 +475,7 @@ function ENT:PhysicsSimulate( phys, deltatime )
 	if not found then
 		self.Chip = nil
 		self:Switch(false)
+		print("NOP")
 		return SIM_NOTHING
 	end
 	
@@ -543,6 +557,7 @@ end
 function ENT:GetLinkTable()
 	return {
 		SetThrust = function(chip, thrust)
+			self.Chip = chip
 			thrust = math.max(0, thrust)
 			
 			self:Switch(thrust > 0)

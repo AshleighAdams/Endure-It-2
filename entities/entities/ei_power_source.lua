@@ -96,11 +96,36 @@ function ENT:Initialize()
 	self.LastThink = CurTime()
 end
 
+function ENT:MakeNicePower(val)
+	local postfixes = {
+		"uW",
+		"mW",
+		"W",
+		"kW",
+		"MW",
+		"GW",
+		"TW",
+		"PW"
+	}
+	
+	local val =  val * 1000 * 1000 -- start at uW
+	local postfix = 1
+		
+	while math.abs(val) > 1000 do
+		if postfix == table.Count(postfixes) then break end
+		val = val / 1000
+		postfix = postfix + 1
+	end
+	return tostring(math.Round(val * 100) / 100) .. postfixes[postfix]
+end
+
 function ENT:Think()
 	self.BaseClass.BaseClass.Think(self)
 	if CLIENT then return end
 	
 	local t = CurTime() - self.LastThink
+	self.LastThink = CurTime()
+	
 	self.WattsCache = self.WattsCache + self.Bandwidth * t
 	self.WattsCache = math.Clamp(self.WattsCache, 0, math.min(self.Watts, self.Bandwidth))
 	
@@ -108,12 +133,23 @@ function ENT:Think()
 	
 	-- ok, lets charge the battery from other sources
 	local watt = math.min(self.Bandwidth, self.Capacity - self.Watts) * t
+	--print(self.Bandwidth, watt)
+	
 	local got = self:Charge(self:GetPowerSources(), watt, false)
 	
 	self.Watts = self.Watts + got
+	
+	if not self.NextUpdateText or CurTime() > self.NextUpdateText then
+		local change = (self.Watts - (self.LastWatts or 0)) * 4
+		
+		self:SetOverlayText(self:MakeNicePower(self.Watts) .. "\n" .. self:MakeNicePower(change) .. "s")
+		self.NextUpdateText = CurTime() + 0.25
+		self.LastWatts = self.Watts
+	end
 end
 
 function ENT:Charge(srcs, watt, exact)
+
 	local totalwatt = 0
 	for k,src in pairs(srcs) do
 		if not IsValid(src) then continue end
@@ -126,6 +162,8 @@ function ENT:Charge(srcs, watt, exact)
 		watt = totalwatt
 	end
 	
+	if totalwatt == 0 then return 0 end
+	
 	local ret = 0
 	for k,src in pairs(srcs) do
 		if not IsValid(src) then continue end
@@ -134,7 +172,7 @@ function ENT:Charge(srcs, watt, exact)
 		local percent = max / totalwatt
 		local watt_used = watt * percent
 		
-		v:TakeWatt(watt_used)
+		src:GetWatts(watt_used)
 		
 		ret = ret + watt_used
 	end

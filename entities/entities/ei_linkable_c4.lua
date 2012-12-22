@@ -47,8 +47,8 @@ end
 function ENT:GetLinkTable()
 	return {
 		Fire = function(chip)
-			// Create an explosion
-			-- TODO
+			if not chip:GetWatts(0.25) then return end
+			
 			local vPoint = self:GetPos()
 			local effectdata = EffectData()
 			effectdata:SetStart( vPoint ) // not sure if we need a start and origin (endpoint) for this effect, but whatever

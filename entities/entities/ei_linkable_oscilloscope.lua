@@ -127,6 +127,8 @@ end
 function ENT:GetLinkTable()
 	return {
 		Draw = function(chip, x, y, intensity)
+			if not chip:GetWatts(0.5) then return end
+			
 			x = x or 0
 			y = y or 0
 			self.LastX = self.LastX or x

@@ -36,6 +36,8 @@ end
 function ENT:GetLinkTable()
 	return {
 		Query = function(chip, x, y, onlymetal)
+			if not chip:GetWatts(0.5) then return 1000000 end
+			
 			x = x or 0
 			y = y or 0
 						

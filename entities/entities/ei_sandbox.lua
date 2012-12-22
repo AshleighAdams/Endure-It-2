@@ -10,7 +10,7 @@ ENT.AdminSpawnable		= false
 ENT.RenderGroup 		= RENDERGROUP_OPAQUE
 ENT.Base				= "base_gmodentity"
 
-ENT.Model				= "models/hunter/plates/plate.mdl"
+ENT.Model				= "models/cheeze/wires/cpu2.mdl"
 ENT.Quota 				= 1000000
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
@@ -33,13 +33,13 @@ function ENT:Initialize()
 	
 	self:SetModel(self.Model)
 end
-
+/*
 function ENT:GetWatts(watt)
 	local totalwatt = 0
 	
 	for k,src in pairs(self.PowerSources) do
 		if not IsValid(src) then continue end
-		totalwatt = totalwatt + src:MaxWatt() /* returns the bandwidth, or the avaibible power if less than bandwidth */
+		totalwatt = totalwatt + src:MaxWatt() // returns the bandwidth, or the avaibible power if less than bandwidth
 	end
 	
 	if totalwatt < watt then
@@ -58,6 +58,35 @@ function ENT:GetWatts(watt)
 		
 		src:GetWatts(watt_used)
 		ret = ret + watt_used
+	end
+	
+	return true
+end
+*/
+function ENT:GetWatts(watt)
+	
+	local sources = {}
+	BuildPowerTable(self, 0, sources, {})
+	
+	local totalwatt = 0
+	
+	for k,src in pairs(sources) do
+		if not IsValid(src) then continue end
+		totalwatt = totalwatt + src:MaxWatt()
+	end
+		
+	if totalwatt < watt then
+		return false
+	end
+		
+	for k,src in pairs(sources) do
+		if not IsValid(src) then continue end
+		
+		local max = src:MaxWatt()
+		local percent = max / totalwatt
+		local watt_used = watt * percent
+		
+		src:GetWatts(watt_used, nil, done)
 	end
 	
 	return true
@@ -105,6 +134,10 @@ function ENT:PostEntityPaste(pl, ent, CreatedEntities)
 	
 	for k,v in pairs(tbl.Links) do
 		self:Sandboxed_CreateLink(k).Entity = CreatedEntities[v]
+	end
+	
+	for k,v in pairs(tbl.PowerSources) do
+		self.PowerSources[k] = CreatedEntities[v]
 	end
 	
 	self:SendUpdatedLinkTable()
@@ -217,23 +250,26 @@ function ENT:Think()
 	end
 	
 	--print(CurTime())
-	self:NextThink(CurTime())
 	
 	debug.sethook(function()
 		error("quota exceeded")
 		self.Crashed = true
 	end, "", self.Quota)
 	
-	local x, err = pcall(self.Enviroment.Think)
+	local x, ret = pcall(self.Enviroment.Think)
 	
 	debug.sethook()
 	
 	if not x then
 		self:SetColor(Color(255, 0, 0))
-		self.Owner:ChatPrint(err)
+		self.Owner:ChatPrint(ret)
 		self.Crashed = true
+	elseif ret then
+		self:NextThink(ret)
+		return true
 	end
 	
+	self:NextThink(CurTime() + 0.1)
 	return true
 end
 

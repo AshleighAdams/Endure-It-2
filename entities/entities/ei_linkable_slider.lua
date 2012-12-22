@@ -25,6 +25,26 @@ function ENT:Initialize()
 	end
 end
 
+function ENT:PreEntityCopy()
+	if CLIENT then return end
+	local info = {}
+	
+	info.Value = self:GetVal()
+	
+	duplicator.StoreEntityModifier(self, "SliderData", info)
+end
+
+function ENT:PostEntityPaste(pl, ent, CreatedEntities)
+	if CLIENT then return end
+	if not ent.EntityMods then return end
+	
+	local tbl = ent.EntityMods["SliderData"]
+	
+	if not tbl then return end
+	
+	self:SetVal(tbl.Value)
+end
+
 function ENT:GetVal()
 	return self:GetNWFloat("Val", 0)
 end

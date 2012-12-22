@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Battery (2kW @ 50wS)"
+ENT.PrintName		= "Magical Generator"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -9,8 +9,8 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
 ENT.Model 			= "models/items/car_battery01.mdl"
-ENT.Capacity		= 2000
-ENT.Bandwidth		= 25
+ENT.Capacity		= 10
+ENT.Bandwidth		= 10
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
@@ -49,6 +49,13 @@ end
 
 function ENT:Think()
 	self.BaseClass.Think(self)
+	
+	self.LastThinkT = self.LastThinkT or CurTime()
+	local t = CurTime() - self.LastThinkT
+	
+	self.Watts = math.Clamp(self.Watts + 10 * t, 0, self.Capacity)
+	
+	self.LastThinkT = CurTime()
 end
 
 function ENT:OnRemove()
@@ -66,14 +73,14 @@ function ENT:PreEntityCopy()
 		info.PowerSources[k] = v:EntIndex()
 	end
 	
-	duplicator.StoreEntityModifier(self, "BatteryData", info)
+	duplicator.StoreEntityModifier(self, "GeneratorData", info)
 end
 
 function ENT:PostEntityPaste(pl, ent, CreatedEntities)
 	if CLIENT then return end
 	if not ent.EntityMods then ErrorNoHalt("Warning: no data to spawn plug with (duped)") return end
 	
-	local tbl = ent.EntityMods["BatteryData"]
+	local tbl = ent.EntityMods["GeneratorData"]
 	if not tbl then ErrorNoHalt("Warning: no data to spawn plug with (EntityMods)") return end
 	
 	for k,v in pairs(tbl.PowerSources) do
