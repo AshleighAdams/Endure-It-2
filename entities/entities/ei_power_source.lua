@@ -12,6 +12,8 @@ ENT.Base 			= "ei_linkable_ent"
 ENT.Model 			= "models/props_lab/huladoll.mdl"
 ENT.Capacity		= 1000 -- 1 kW
 ENT.Bandwidth		= 50 -- can draw 50watt/sec
+ENT.EI_Power		= true
+ENT.EndPoint		= true
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
@@ -24,7 +26,7 @@ function ENT:MaxWatt()
 		return self.WattsCache
 	end
 	
-	return self.WattsCache
+	return self.Bandwidth
 end
 
 function ENT:TakeWatts(amm)
@@ -32,12 +34,60 @@ function ENT:TakeWatts(amm)
 	self.WattsCache = self.WattsCache - amm
 end
 
+function BuildPowerTable(ent, depth, ret, done)
+	if depth > 16 then
+		ErrorNoHalt("Warning: max depth hit!")
+		return
+	end
+	
+	if done[ent] then return end
+	done[ent] = true
+	
+	if ent.EndPoint then
+		table.insert(ret, ent)
+	end
+	
+	for k,v in pairs(ent.PowerSources) do
+		BuildPowerTable(v, depth + 1, ret, done)
+	end
+end
+
+function ENT:GetWatts(watt)
+	local sources = {}
+	BuildPowerTable(self, 0, sources, {})
+	
+	local totalwatt = 0
+	
+	for k,src in pairs(sources) do
+		if not IsValid(src) then continue end
+		
+		totalwatt = totalwatt + src:MaxWatt(true, done) /* returns the bandwidth, or the avaibible power if less than bandwidth */
+	end
+	
+	if totalwatt < watt then
+		return false
+	end
+	
+	
+	for k,src in pairs(sources) do
+		if not IsValid(src) then continue end
+		
+		local max = src:MaxWatt(true, done)
+		local percent = max / totalwatt
+		local watt_used = watt * percent
+		
+		src:GetWatts(watt_used, nil, done)
+	end
+	
+	return true
+end
+
 function ENT:GetPowerSources()
 	return self.PowerSources
 end
 
 function ENT:Initialize()
-	self.BaseClass.Initialize(self)
+	self.BaseClass.BaseClass.Initialize(self)
 	
 	self.Watts = 0
 	self.WattsCache = 0
@@ -47,7 +97,7 @@ function ENT:Initialize()
 end
 
 function ENT:Think()
-	self.BaseClass.Think(self)
+	self.BaseClass.BaseClass.Think(self)
 	if CLIENT then return end
 	
 	local t = CurTime() - self.LastThink
@@ -60,7 +110,7 @@ function ENT:Think()
 	local watt = math.min(self.Bandwidth, self.Capacity - self.Watts) * t
 	local got = self:Charge(self:GetPowerSources(), watt, false)
 	
-	self.Watt = self.Watt + got
+	self.Watts = self.Watts + got
 end
 
 function ENT:Charge(srcs, watt, exact)

@@ -56,7 +56,7 @@ function ENT:GetWatts(watt)
 		
 		local watt_used = watt * percent
 		
-		self:TakeWatt(watt_used)
+		src:GetWatts(watt_used)
 		ret = ret + watt_used
 	end
 	
@@ -85,7 +85,12 @@ function ENT:PreEntityCopy()
 		info.Links[k] = v.Entity:EntIndex()
 	end
 	
-	duplicator.StoreEntityModifier(self, "CodeAndLinks", dupeInfo)
+	info.PowerSources = {}
+	for k,v in pairs(self.PowerSources or {}) do
+		info.PowerSources[k] = v:EntIndex()
+	end
+	
+	duplicator.StoreEntityModifier(self, "CodeAndLinks", info)
 end
 
 function ENT:PostEntityPaste(pl, ent, CreatedEntities)

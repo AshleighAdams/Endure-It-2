@@ -14,7 +14,7 @@ ENT.Bandwidth		= 25
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
-ENT.Spawnable			= false
+ENT.Spawnable			= true
 ENT.AdminSpawnable		= false
 
 function ENT:MaxWatt()
@@ -29,6 +29,13 @@ end
 function ENT:TakeWatts(amm)
 	self.Watts = self.Watts - amm
 	self.WattsCache = self.WattsCache - amm
+end
+
+function ENT:GetWatts(watt)
+	if self:MaxWatt() < watt then return false end
+	
+	self:TakeWatts(watt)
+	return true
 end
 
 function ENT:Initialize()
@@ -48,4 +55,28 @@ function ENT:OnRemove()
 end
 
 function ENT:OnTakeDamage(dmginfo)
+end
+
+function ENT:PreEntityCopy()
+	if CLIENT then return end
+	local info = {}
+	
+	info.PowerSources = {}
+	for k,v in pairs(self.PowerSources) do
+		info.PowerSources[k] = v:EntIndex()
+	end
+	
+	duplicator.StoreEntityModifier(self, "BatteryData", info)
+end
+
+function ENT:PostEntityPaste(pl, ent, CreatedEntities)
+	if CLIENT then return end
+	if not ent.EntityMods then ErrorNoHalt("Warning: no data to spawn plug with (duped)") return end
+	
+	local tbl = ent.EntityMods["BatteryData"]
+	if not tbl then ErrorNoHalt("Warning: no data to spawn plug with (EntityMods)") return end
+	
+	for k,v in pairs(tbl.PowerSources) do
+		self.PowerSources[k] = CreatedEntities[v]
+	end
 end
