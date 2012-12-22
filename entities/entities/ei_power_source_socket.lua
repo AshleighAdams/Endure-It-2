@@ -29,28 +29,12 @@ function ENT:GetOther()
 end
 
 function ENT:MaxWatt(from_otherside, doneents, depth)
-	if not doneents then doneents = {} end
-	depth = depth or 0
-	
-	if depth > 16 then return 0 end
-	
-	if doneents[self] then return 0 end
-	doneents[self] = true
-	
-	if from_otherside then
-		local max = 0
-		for k,v in pairs(self.PowerSources) do
-			max = max + v:MaxWatt(true, doneents, depth)
-		end
-		
-		return max
-	end
-	
 	if self:GetOther() then
-		return self:GetOther():MaxWatt(true, doneents)
+		return self.BaseClass.MaxWatt(self:GetOther())
 	end
 	return 0
 end
+
 
 function ENT:GetWatts(amm, from_otherside, doneents)
 	if not doneents then doneents = {} end

@@ -63,7 +63,17 @@ function ENT:GetWatts(watt)
 	return true
 end
 */
+
 function ENT:GetWatts(watt)
+	if self.Watts != self.Watts then self.Watts = 0 end
+	
+	if self.EndPoint then
+		if self:MaxWatt() < watt then return false end
+	
+		self:TakeWatts(watt)
+		
+		return true
+	end
 	
 	local sources = {}
 	BuildPowerTable(self, 0, sources, {})
@@ -72,25 +82,28 @@ function ENT:GetWatts(watt)
 	
 	for k,src in pairs(sources) do
 		if not IsValid(src) then continue end
-		totalwatt = totalwatt + src:MaxWatt()
+				
+		totalwatt = totalwatt + src:MaxWatt(true, done) /* returns the bandwidth, or the avaibible power if less than bandwidth */
 	end
-		
+	
 	if totalwatt < watt then
 		return false
 	end
-		
+	
+	
 	for k,src in pairs(sources) do
 		if not IsValid(src) then continue end
 		
-		local max = src:MaxWatt()
+		local max = src:MaxWatt(true, done)
 		local percent = max / totalwatt
 		local watt_used = watt * percent
-		
-		src:GetWatts(watt_used, nil, done)
+
+		src:TakeWatts(watt_used)
 	end
 	
 	return true
 end
+
 
 function ENT:OnRemove()
 end

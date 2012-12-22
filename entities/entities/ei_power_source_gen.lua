@@ -9,26 +9,22 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
 ENT.Model 			= "models/items/car_battery01.mdl"
-ENT.Capacity		= 10
-ENT.Bandwidth		= 10
-
-AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
+ENT.Yeild			= 10
+ENT.EndPoint 		= true
 
 ENT.Spawnable			= true
 ENT.AdminSpawnable		= false
 
-function ENT:MaxWatt()
-	-- this could be recursive, for say a plug
-	if self.WattsCache < self.Bandwidth then
-		return self.WattsCache
-	end
-	
-	return self.WattsCache
-end
 
+AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
+
+
+function ENT:MaxWatt()
+	return self.Watts
+end
+/*
 function ENT:TakeWatts(amm)
 	self.Watts = self.Watts - amm
-	self.WattsCache = self.WattsCache - amm
 end
 
 function ENT:GetWatts(watt)
@@ -37,12 +33,11 @@ function ENT:GetWatts(watt)
 	self:TakeWatts(watt)
 	return true
 end
-
+*/
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	
 	self.Watts = 0
-	self.WattsCache = 0
 	
 	self.LastThink = CurTime()
 end
@@ -53,7 +48,11 @@ function ENT:Think()
 	self.LastThinkT = self.LastThinkT or CurTime()
 	local t = CurTime() - self.LastThinkT
 	
-	self.Watts = math.Clamp(self.Watts + 10 * t, 0, self.Capacity)
+	local gain = self.Yeild * t
+	if self.Watts + gain > self.Yeild then
+		gain = self.Yeild - self.Watts
+	end
+	self:AddWatts(gain)
 	
 	self.LastThinkT = CurTime()
 end

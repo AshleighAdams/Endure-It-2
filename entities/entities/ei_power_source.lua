@@ -21,20 +21,55 @@ ENT.Spawnable			= false
 ENT.AdminSpawnable		= false
 
 function ENT:MaxWatt()
-	-- this could be recursive, for say a plug
-	if self.WattsCache < self.Bandwidth then
-		return self.WattsCache
+	if self.EndPoint then
+		
+		if self.WattsCache < self.Bandwidth then
+			return self.WattsCache
+		end
+	
+		if self.Watts <= 0 then
+			self.Watts = 0
+			return 0
+		end
+	
+		return self.Bandwidth
 	end
 	
-	return self.Bandwidth
+	local sources = {}
+	BuildPowerTable(self, 0, sources, {})
+	
+	local totalwatt = 0
+	
+	for k,src in pairs(sources) do
+		if not IsValid(src) then continue end
+		
+		totalwatt = totalwatt + src:MaxWatt(true, done) /* returns the bandwidth, or the avaibible power if less than bandwidth */
+	end
+	
+	return totalwatt
 end
 
 function ENT:TakeWatts(amm)
+	if self.Watts != self.Watts then self.Watts = 0 end
+	if self.WattsCache != self.WattsCache then self.WattsCache = 0 end
+	
 	self.Watts = self.Watts - amm
 	self.WattsCache = self.WattsCache - amm
+	
+	self.Drawn = (self.Drawn or 0) + amm
+end
+
+function ENT:AddWatts(amm)
+	if self.Watts != self.Watts then self.Watts = 0 end
+	
+	self.Watts = self.Watts + amm
+	
+	self.Charged = (self.Charged or 0) + amm
 end
 
 function BuildPowerTable(ent, depth, ret, done)
+	if not IsValid(ent) then return end
+	
 	if depth > 16 then
 		ErrorNoHalt("Warning: max depth hit!")
 		return
@@ -45,14 +80,26 @@ function BuildPowerTable(ent, depth, ret, done)
 	
 	if ent.EndPoint then
 		table.insert(ret, ent)
+		return
 	end
-	
+
 	for k,v in pairs(ent.PowerSources) do
 		BuildPowerTable(v, depth + 1, ret, done)
 	end
 end
 
 function ENT:GetWatts(watt)
+	if self.Watts != self.Watts then self.Watts = 0 end
+	if self.WattsCache != self.WattsCache then self.WattsCache = 0 end
+	
+	if self.EndPoint then
+		if self:MaxWatt() < watt then return false end
+	
+		self:TakeWatts(watt)
+		
+		return true
+	end
+	
 	local sources = {}
 	BuildPowerTable(self, 0, sources, {})
 	
@@ -108,6 +155,8 @@ function ENT:MakeNicePower(val)
 		"PW"
 	}
 	
+	if not val then return "0uW" end
+	
 	local val =  val * 1000 * 1000 -- start at uW
 	local postfix = 1
 		
@@ -120,8 +169,23 @@ function ENT:MakeNicePower(val)
 end
 
 function ENT:Think()
+	if self.Watts != self.Watts then self.Watts = 0 end
+	if self.WattsCache != self.WattsCache then self.WattsCache = 0 end
+	
 	self.BaseClass.BaseClass.Think(self)
 	if CLIENT then return end
+	
+	if not self.NextUpdateText or CurTime() > self.NextUpdateText then
+		local drawn = self.Drawn
+		self.Drawn = 0
+		
+		local charge = self.Charged
+		self.Charged = 0
+		
+		self:SetOverlayText(self:MakeNicePower(self.Watts) .. "\nDraw: " .. self:MakeNicePower(drawn) .. "s\nCharge: " .. self:MakeNicePower(charge) .. "s" )
+		self.NextUpdateText = CurTime() + 1
+		self.LastWatts = self.Watts
+	end
 	
 	local t = CurTime() - self.LastThink
 	self.LastThink = CurTime()
@@ -137,15 +201,7 @@ function ENT:Think()
 	
 	local got = self:Charge(self:GetPowerSources(), watt, false)
 	
-	self.Watts = self.Watts + got
-	
-	if not self.NextUpdateText or CurTime() > self.NextUpdateText then
-		local change = (self.Watts - (self.LastWatts or 0)) * 4
-		
-		self:SetOverlayText(self:MakeNicePower(self.Watts) .. "\n" .. self:MakeNicePower(change) .. "s")
-		self.NextUpdateText = CurTime() + 0.25
-		self.LastWatts = self.Watts
-	end
+	self:AddWatts(got)
 end
 
 function ENT:Charge(srcs, watt, exact)

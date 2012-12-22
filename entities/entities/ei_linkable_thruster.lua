@@ -83,7 +83,7 @@ function ENT:Initialize()
 		self.ForceAngle		= self.ThrustOffset:GetNormalized() * -1
 		
 		self:SetEffect( "plasma" )
-		self:SetSound( "k_lab.ringsrotating" )
+		self:SetSound( "k_lab.ringsrotating" ) //  /thrusters/mh1.wav sounds better?
 		
 		self:Switch(true)
 		self:Switch(false)
@@ -142,6 +142,43 @@ function ENT:Think()
 		end
 	end
 	*/
+	
+	
+	if SERVER then
+		if self.Chip then
+			local found = false
+			for k,v in pairs(self.Chip.Links) do
+				if IsValid(v.Entity) and v.Entity == self then
+					found = true
+					break
+				end
+			end
+			
+			if not found then
+				self.Chip = nil
+				self:Switch(false)
+			end
+		end
+		
+		local t = CurTime() - (self.LastThrusterThinkT or CurTime())
+		self.LastThrusterThinkT = CurTime()
+		
+		if self.force > 0 and self.Chip then
+			local got = self.Chip:GetWatts(self.force / 1000 * t)
+			
+			if got then
+				if not self:IsOn() then
+					self:Switch(true)
+				end
+			else
+				if self:IsOn() then
+					self:Switch(false)
+				end
+			end
+		end
+	
+	end
+	
 	self.BaseClass.Think( self )
 	
 	if ( CLIENT ) then
@@ -448,37 +485,10 @@ function ENT:PhysicsSimulate( phys, deltatime )
 	--if (!self:IsOn()) then return SIM_NOTHING end
 	
 	if not IsValid(self.Chip) then
-		self:Switch(false)
+		--self:Switch(false)
 		return SIM_NOTHING
 	end
-	
-	if self.force != 0 and not self:IsOn() then
-		if self.Chip:GetWatts(self.force / 1000) then
-			self:Switch(true)
-		end
-	elseif self.force != 0 and self:IsOn() then
-		if not self.Chip:GetWatts(self.force / 1000) then
-			self:Switch(false)
-		end
-	end
-		
 	if (!self:IsOn()) then return SIM_NOTHING end
-	
-	local found = false
-	for k,v in pairs(self.Chip.Links) do
-		if IsValid(v.Entity) and v.Entity == self then
-			found = true
-			break
-		end
-	end
-	
-	if not found then
-		self.Chip = nil
-		self:Switch(false)
-		print("NOP")
-		return SIM_NOTHING
-	end
-	
 	local ForceAngle, ForceLinear = self.ForceAngle, self.ForceLinear
 	
 	if SERVER and self:GetNWFloat("force") > 250 then
@@ -560,7 +570,9 @@ function ENT:GetLinkTable()
 			self.Chip = chip
 			thrust = math.max(0, thrust)
 			
-			self:Switch(thrust > 0)
+			local got = self.Chip:GetWatts(thrust / 1000)
+			
+			self:Switch(got and thrust > 0)
 			self:SetForce(thrust)
 		end
 	}
