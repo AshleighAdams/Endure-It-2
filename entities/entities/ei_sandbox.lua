@@ -310,7 +310,7 @@ function ENT:Sandboxed_CreateLink(name)
 			
 			if k == "Connected" then
 				return IsValid(link.Entity)
-			elseif k == "Invoke" then
+			elseif k == "Invoke" then -- TODO: remove
 				if not IsValid(link.Entity) then return nil end
 				
 				return function(name, ...)
@@ -318,6 +318,15 @@ function ENT:Sandboxed_CreateLink(name)
 					
 					local tbl = link.Entity:GetLinkTable()
 					return tbl[name](self, ...)
+				end
+			elseif type(tbl[k]) == "function" then
+				if not IsValid(link.Entity) then return nil end
+				
+				return function(...)
+					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
+					
+					local tbl = link.Entity:GetLinkTable()
+					return tbl[k](self, ...)
 				end
 			end
 			
@@ -336,7 +345,7 @@ function ENT:Sandboxed_CreateLink(name)
 	
 	self:SendUpdatedLinkTable()
 	
-	return link
+	return self:Sandboxed_GetLink(name)
 end
 
 function ENT:SendUpdatedLinkTable()
