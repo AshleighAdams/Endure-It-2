@@ -19,25 +19,25 @@ ENT.AdminSpawnable		= false
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
 
-function ENT:MaxWatt()
-	return self.Watts
+function ENT:MaxJoule()
+	return self.Joules
 end
 /*
-function ENT:TakeWatts(amm)
-	self.Watts = self.Watts - amm
+function ENT:TakeJoules(amm)
+	self.Joules = self.Joules - amm
 end
 
-function ENT:GetWatts(watt)
-	if self:MaxWatt() < watt then return false end
+function ENT:GetJoules(joule)
+	if self:MaxJoule() < joule then return false end
 	
-	self:TakeWatts(watt)
+	self:TakeJoules(joule)
 	return true
 end
 */
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	
-	self.Watts = 0
+	self.Joules = 0
 	
 	self.LastThink = CurTime()
 end
@@ -49,10 +49,10 @@ function ENT:Think()
 	local t = CurTime() - self.LastThinkT
 	
 	local gain = self.Yeild * t
-	if self.Watts + gain > self.Yeild then
-		gain = self.Yeild - self.Watts
+	if self.Joules + gain > self.Yeild then
+		gain = self.Yeild - self.Joules
 	end
-	self:AddWatts(gain)
+	self:AddJoules(gain)
 	
 	self.LastThinkT = CurTime()
 end

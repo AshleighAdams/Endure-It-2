@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Fusion Reactor"
+ENT.PrintName		= "Radioisotope Thermoelectric Generator"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -8,8 +8,8 @@ ENT.Instructions	= ""
 ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
-ENT.Model 			= "models/smallbridge/life support/sbfusiongen.mdl"
-ENT.Yeild			= 5 * 1000 * 1000 -- 5MW
+ENT.Model 			= "models/props_wasteland/laundry_washer003.mdl"
+ENT.Yeild			= 62
 ENT.EndPoint 		= true
 ENT.Capacity = ENT.Yeild
 ENT.Bandwidth = ENT.Yeild

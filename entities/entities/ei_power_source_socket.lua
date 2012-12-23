@@ -28,15 +28,15 @@ function ENT:GetOther()
 	return nil
 end
 
-function ENT:MaxWatt(from_otherside, doneents, depth)
+function ENT:MaxJoule(from_otherside, doneents, depth)
 	if self:GetOther() then
-		return self.BaseClass.MaxWatt(self:GetOther())
+		return self.BaseClass.MaxJoule(self:GetOther())
 	end
 	return 0
 end
 
 
-function ENT:GetWatts(amm, from_otherside, doneents)
+function ENT:GetJoules(amm, from_otherside, doneents)
 	if not doneents then doneents = {} end
 	
 	if doneents[self] then return 0 end
@@ -44,14 +44,14 @@ function ENT:GetWatts(amm, from_otherside, doneents)
 	
 	
 	if from_otherside then
-		return self.BaseClass.GetWatts(self, amm, doneents)
+		return self.BaseClass.GetJoules(self, amm, doneents)
 	end
 	
 	if self:GetOther() then
-		return self:GetOther():GetWatts(amm, true, doneents)
+		return self:GetOther():GetJoules(amm, true, doneents)
 	end
 	return false
-	-- take watts from other
+	-- take joules from other
 end
 
 function ENT:Initialize()
