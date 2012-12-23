@@ -47,7 +47,7 @@ end
 function ENT:GetLinkTable()
 	return {
 		Fire = function(chip)
-			if not chip:GetWatts(0.25) then return end
+			if not chip:GetJoules(0.25) then return end
 			
 			local vPoint = self:GetPos()
 			local effectdata = EffectData()

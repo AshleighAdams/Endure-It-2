@@ -55,7 +55,7 @@ end
 function ENT:GetLinkTable()
 	return {
 		Query = function(chip, fov, resx, resy)
-			if not chip:GetWatts((resx * resy) / 4000) then return end /* 64x64 = 1W */
+			if not chip:GetJoules((resx * resy) / 4000) then return end /* 64x64 = 1W */
 			
 			local ret = {}
 			

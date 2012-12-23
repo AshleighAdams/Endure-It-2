@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Fusion Reactor"
+ENT.PrintName		= "Solar Panel (L)"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -8,8 +8,8 @@ ENT.Instructions	= ""
 ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
-ENT.Model 			= "models/smallbridge/life support/sbfusiongen.mdl"
-ENT.Yeild			= 5 * 1000 * 1000 -- 5MW
+ENT.Model 			= "models/ce_ls3additional/solar_generator/solar_generator_giant.mdl"
+ENT.Yeild			= 0
 ENT.EndPoint 		= true
 ENT.Capacity = ENT.Yeild
 ENT.Bandwidth = ENT.Yeild
@@ -38,6 +38,12 @@ end
 */
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
+	
+	local max = self:OBBMaxs()
+	self.Yeild = (max.x * max.y * 2) / 621 * (12 / 60 / 60) -- 12Wh per square foot
+	
+	self.Capacity = self.Yeild
+	self.Bandwidth = self.Yeild
 	
 	self.Joules = 0
 	

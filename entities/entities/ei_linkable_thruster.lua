@@ -164,7 +164,7 @@ function ENT:Think()
 		self.LastThrusterThinkT = CurTime()
 		
 		if self.force > 0 and self.Chip then
-			local got = self.Chip:GetWatts(self.force / 1000 * t)
+			local got = self.Chip:GetJoules(self.force / 1000 * t)
 			
 			if got then
 				if not self:IsOn() then
@@ -570,7 +570,7 @@ function ENT:GetLinkTable()
 			self.Chip = chip
 			thrust = math.max(0, thrust)
 			
-			local got = self.Chip:GetWatts(thrust / 1000)
+			local got = self.Chip:GetJoules(thrust / 1000)
 			
 			self:Switch(got and thrust > 0)
 			self:SetForce(thrust)

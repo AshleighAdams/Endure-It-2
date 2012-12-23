@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.PrintName		= "Plug"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
-ENT.Purpose			= "Plug to transfer all them WattZ"
+ENT.Purpose			= "Plug to transfer all them JouleZ"
 ENT.Instructions	= ""
 ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 

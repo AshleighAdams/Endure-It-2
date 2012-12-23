@@ -34,15 +34,15 @@ function ENT:Initialize()
 	self:SetModel(self.Model)
 end
 /*
-function ENT:GetWatts(watt)
-	local totalwatt = 0
+function ENT:GetJoules(joule)
+	local totaljoule = 0
 	
 	for k,src in pairs(self.PowerSources) do
 		if not IsValid(src) then continue end
-		totalwatt = totalwatt + src:MaxWatt() // returns the bandwidth, or the avaibible power if less than bandwidth
+		totaljoule = totaljoule + src:MaxJoule() // returns the bandwidth, or the avaibible power if less than bandwidth
 	end
 	
-	if totalwatt < watt then
+	if totaljoule < joule then
 		return false
 	end
 	
@@ -51,26 +51,26 @@ function ENT:GetWatts(watt)
 	for k,src in pairs(self.PowerSources) do
 		if not IsValid(src) then continue end
 		
-		local max = src:MaxWatt() 
-		local percent = max / totalwatt
+		local max = src:MaxJoule() 
+		local percent = max / totaljoule
 		
-		local watt_used = watt * percent
+		local joule_used = joule * percent
 		
-		src:GetWatts(watt_used)
-		ret = ret + watt_used
+		src:GetJoules(joule_used)
+		ret = ret + joule_used
 	end
 	
 	return true
 end
 */
 
-function ENT:GetWatts(watt)
-	if self.Watts != self.Watts then self.Watts = 0 end
+function ENT:GetJoules(joule)
+	if self.Joules != self.Joules then self.Joules = 0 end
 	
 	if self.EndPoint then
-		if self:MaxWatt() < watt then return false end
+		if self:MaxJoule() < joule then return false end
 	
-		self:TakeWatts(watt)
+		self:TakeJoules(joule)
 		
 		return true
 	end
@@ -78,15 +78,15 @@ function ENT:GetWatts(watt)
 	local sources = {}
 	BuildPowerTable(self, 0, sources, {})
 	
-	local totalwatt = 0
+	local totaljoule = 0
 	
 	for k,src in pairs(sources) do
 		if not IsValid(src) then continue end
 				
-		totalwatt = totalwatt + src:MaxWatt(true, done) /* returns the bandwidth, or the avaibible power if less than bandwidth */
+		totaljoule = totaljoule + src:MaxJoule(true, done) /* returns the bandwidth, or the avaibible power if less than bandwidth */
 	end
 	
-	if totalwatt < watt then
+	if totaljoule < joule then
 		return false
 	end
 	
@@ -94,11 +94,11 @@ function ENT:GetWatts(watt)
 	for k,src in pairs(sources) do
 		if not IsValid(src) then continue end
 		
-		local max = src:MaxWatt(true, done)
-		local percent = max / totalwatt
-		local watt_used = watt * percent
+		local max = src:MaxJoule(true, done)
+		local percent = max / totaljoule
+		local joule_used = joule * percent
 
-		src:TakeWatts(watt_used)
+		src:TakeJoules(joule_used)
 	end
 	
 	return true
@@ -310,7 +310,7 @@ function ENT:Sandboxed_CreateLink(name)
 			
 			if k == "Connected" then
 				return IsValid(link.Entity)
-			elseif k == "Invoke" then
+			elseif k == "Invoke" then -- TODO: remove
 				if not IsValid(link.Entity) then return nil end
 				
 				return function(name, ...)
@@ -324,6 +324,15 @@ function ENT:Sandboxed_CreateLink(name)
 					end
 					
 					return func(self, ...)
+				end
+			elseif type(tbl[k]) == "function" then
+				if not IsValid(link.Entity) then return nil end
+				
+				return function(...)
+					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
+					
+					local tbl = link.Entity:GetLinkTable()
+					return tbl[k](self, ...)
 				end
 			end
 			
@@ -342,7 +351,7 @@ function ENT:Sandboxed_CreateLink(name)
 	
 	self:SendUpdatedLinkTable()
 	
-	return link
+	return self:Sandboxed_GetLink(name)
 end
 
 function ENT:SendUpdatedLinkTable()
