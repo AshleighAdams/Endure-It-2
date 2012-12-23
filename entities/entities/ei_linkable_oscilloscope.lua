@@ -127,7 +127,7 @@ end
 function ENT:GetLinkTable()
 	return {
 		Draw = function(chip, x, y, intensity)
-			if not chip:GetJoules(0.5) then return end
+			if not chip:GetJoules(5) then return end
 			
 			x = x or 0
 			y = y or 0

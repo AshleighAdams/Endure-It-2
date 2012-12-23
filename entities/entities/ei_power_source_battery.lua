@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Battery (1.2kWh)"
+ENT.PrintName		= "Battery (1.5kWh @ 300Ws)"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -9,8 +9,8 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
 ENT.Model 			= "models/items/car_battery01.mdl"
-ENT.Capacity		= 1.2 * 60 * 60 -- 1.2kWh
-ENT.Bandwidth		= 250
+ENT.Capacity		= 2728*1000 -- 2728kJ
+ENT.Bandwidth		= 300
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 

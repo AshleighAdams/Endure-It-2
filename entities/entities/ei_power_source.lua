@@ -182,7 +182,7 @@ function ENT:Think()
 		local charge = self.Charged
 		self.Charged = 0
 		
-		self:SetOverlayText(self:MakeNicePower(self.Joules) .. "\nDraw: " .. self:MakeNicePower(drawn) .. "s\nCharge: " .. self:MakeNicePower(charge) .. "s" )
+		self:SetOverlayText(self:MakeNicePower(self.Joules) .. "\nDraw: " .. self:MakeNicePower(drawn) .. "\nCharge: " .. self:MakeNicePower(charge) )
 		self.NextUpdateText = CurTime() + 1
 		self.LastJoules = self.Joules
 	end

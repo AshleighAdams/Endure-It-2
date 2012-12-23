@@ -307,6 +307,12 @@ function ENT:Sandboxed_CreateLink(name)
 	link.Meta = {
 		__index = function(tbl, k)
 			--print("index: " .. k)
+			print(k)
+			local tbl2
+			
+			if IsValid(link.Entity) then
+				tbl2 = link.Entity:GetLinkTable()
+			end
 			
 			if k == "Connected" then
 				return IsValid(link.Entity)
@@ -317,23 +323,24 @@ function ENT:Sandboxed_CreateLink(name)
 					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
 					
 					local tbl = link.Entity:GetLinkTable()
-					return tbl[name](self, ...)
+					return rawget(tbl, name)(self, ...)
 				end
-			elseif type(tbl[k]) == "function" then
+			elseif tbl2 != nil and type(rawget(tbl2, k)) == "function" then
 				if not IsValid(link.Entity) then return nil end
 				
 				return function(...)
 					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
 					
 					local tbl = link.Entity:GetLinkTable()
-					return tbl[k](self, ...)
+					
+					return rawget(tbl, k)(self, ...)
 				end
 			end
 			
 			if IsValid(link.Entity) then
 				local tbl = link.Entity:GetLinkTable()
 				
-				local v = tbl[k]
+				local v = rawget(tbl, k)
 				
 				if type(v) == "function" then return nil end
 				return v

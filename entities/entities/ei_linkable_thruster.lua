@@ -147,7 +147,7 @@ function ENT:Think()
 	if SERVER then
 		if self.Chip then
 			local found = false
-			for k,v in pairs(self.Chip.Links) do
+			for k,v in pairs(self.Chip.Links or {}) do
 				if IsValid(v.Entity) and v.Entity == self then
 					found = true
 					break
@@ -164,7 +164,7 @@ function ENT:Think()
 		self.LastThrusterThinkT = CurTime()
 		
 		if self.force > 0 and self.Chip then
-			local got = self.Chip:GetJoules(self.force / 1000 * t)
+			local got = self.Chip:GetJoules(self.force / 100 * t)
 			
 			if got then
 				if not self:IsOn() then
@@ -570,7 +570,7 @@ function ENT:GetLinkTable()
 			self.Chip = chip
 			thrust = math.max(0, thrust)
 			
-			local got = self.Chip:GetJoules(thrust / 1000)
+			local got = self.Chip:GetJoules(thrust / 100)
 			
 			self:Switch(got and thrust > 0)
 			self:SetForce(thrust)
