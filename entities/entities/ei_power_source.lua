@@ -209,6 +209,10 @@ function ENT:Charge(srcs, joule, exact)
 	local totaljoule = 0
 	for k,src in pairs(srcs) do
 		if not IsValid(src) then continue end
+		
+		if not src.MaxJoule then
+			error(src:GetClass() .. " has no MaxJoule")
+		end
 		totaljoule = totaljoule + src:MaxJoule() /* returns the bandwidth, or the avaibible power if less than bandwidth */
 	end
 	

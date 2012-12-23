@@ -226,7 +226,7 @@ function ENT:Setup(code, name)
 		},
 		// Garry's Mod functions
 		print = print, PrintTable = PrintTable, // DANGER
-		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector
+		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector, Color = Color
 	}
 	
 	self.Enviroment["_G"] = self.Enviroment
@@ -316,15 +316,6 @@ function ENT:Sandboxed_CreateLink(name)
 			
 			if k == "Connected" then
 				return IsValid(link.Entity)
-			elseif k == "Invoke" then -- TODO: remove
-				if not IsValid(link.Entity) then return nil end
-				
-				return function(name, ...)
-					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
-					
-					local tbl = link.Entity:GetLinkTable()
-					return rawget(tbl, name)(self, ...)
-				end
 			elseif tbl2 != nil and type(rawget(tbl2, k)) == "function" then
 				if not IsValid(link.Entity) then return nil end
 				
@@ -332,8 +323,12 @@ function ENT:Sandboxed_CreateLink(name)
 					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
 					
 					local tbl = link.Entity:GetLinkTable()
+					local func = rawget(tbl, k)
+					if not func then
+						error("The method `" .. name .. "' does not exist for " .. link.Entity:GetClass(), -2)
+					end
 					
-					return rawget(tbl, k)(self, ...)
+					return func(self, ...)
 				end
 			end
 			
