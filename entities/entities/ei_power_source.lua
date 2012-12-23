@@ -209,6 +209,9 @@ function ENT:Charge(srcs, watt, exact)
 	local totalwatt = 0
 	for k,src in pairs(srcs) do
 		if not IsValid(src) then continue end
+		if not src.MaxWatt then
+			error(src:GetClass() .. " has no MaxWatt")
+		end
 		totalwatt = totalwatt + src:MaxWatt() /* returns the bandwidth, or the avaibible power if less than bandwidth */
 	end
 	

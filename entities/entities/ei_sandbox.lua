@@ -226,7 +226,7 @@ function ENT:Setup(code, name)
 		},
 		// Garry's Mod functions
 		print = print, PrintTable = PrintTable, // DANGER
-		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector
+		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector, Color = Color
 	}
 	
 	self.Enviroment["_G"] = self.Enviroment
@@ -317,7 +317,13 @@ function ENT:Sandboxed_CreateLink(name)
 					if not IsValid(link.Entity) then error("link not connected!", 2) return nil end
 					
 					local tbl = link.Entity:GetLinkTable()
-					return tbl[name](self, ...)
+					local func = tbl[name]
+					
+					if not func then
+						error("The method `" .. name .. "' does not exist for " .. link.Entity:GetClass(), -2)
+					end
+					
+					return func(self, ...)
 				end
 			end
 			
