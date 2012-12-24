@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Solar Panel (S)"
+ENT.PrintName		= "Battery (1kJ)"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -8,61 +8,28 @@ ENT.Instructions	= ""
 ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
-ENT.Model 			= "models/ce_ls3additional/solar_generator/solar_generator_medium.mdl"
-ENT.Yeild			= 0
-ENT.EndPoint 		= true
-ENT.Capacity = ENT.Yeild
-ENT.Bandwidth = ENT.Yeild
+ENT.Model 			= "models/items/battery.mdl"
+// Same battery found in a 206
+ENT.Capacity		= 10000 /* 1kJ */
+ENT.Bandwidth		= 10000
+
+AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
 ENT.Spawnable			= true
 ENT.AdminSpawnable		= false
 
 
-AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
-
-
-function ENT:MaxJoule()
-	return self.Joules
-end
-/*
-function ENT:TakeJoules(amm)
-	self.Joules = self.Joules - amm
-end
-
-function ENT:GetJoules(joule)
-	if self:MaxJoule() < joule then return false end
-	
-	self:TakeJoules(joule)
-	return true
-end
-*/
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	
-	local max = self:OBBMaxs()
-	self.Yeild = (max.x * max.y * 2) / 621 * (12) -- 12Wh per square foot
-	
-	self.Capacity = self.Yeild
-	self.Bandwidth = self.Yeild
-	
 	self.Joules = 0
+	self.JoulesCache = 0
 	
 	self.LastThink = CurTime()
 end
 
 function ENT:Think()
 	self.BaseClass.Think(self)
-	
-	self.LastThinkT = self.LastThinkT or CurTime()
-	local t = CurTime() - self.LastThinkT
-	
-	local gain = self.Yeild * t
-	if self.Joules + gain > self.Yeild then
-		gain = self.Yeild - self.Joules
-	end
-	self:AddJoules(gain)
-	
-	self.LastThinkT = CurTime()
 end
 
 function ENT:OnRemove()
@@ -80,14 +47,14 @@ function ENT:PreEntityCopy()
 		info.PowerSources[k] = v:EntIndex()
 	end
 	
-	duplicator.StoreEntityModifier(self, "GeneratorData", info)
+	duplicator.StoreEntityModifier(self, "BatteryData", info)
 end
 
 function ENT:PostEntityPaste(pl, ent, CreatedEntities)
 	if CLIENT then return end
 	if not ent.EntityMods then ErrorNoHalt("Warning: no data to spawn plug with (duped)") return end
 	
-	local tbl = ent.EntityMods["GeneratorData"]
+	local tbl = ent.EntityMods["BatteryData"]
 	if not tbl then ErrorNoHalt("Warning: no data to spawn plug with (EntityMods)") return end
 	
 	for k,v in pairs(tbl.PowerSources) do

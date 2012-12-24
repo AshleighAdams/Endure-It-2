@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName		= "Battery (1.5kWh @ 300Ws)"
+ENT.PrintName		= "Battery (972kJ)"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
 ENT.Purpose			= "..."
@@ -9,8 +9,9 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
 ENT.Model 			= "models/items/car_battery01.mdl"
-ENT.Capacity		= 2728*1000 -- 2728kJ
-ENT.Bandwidth		= 300
+// Same battery found in a 206
+ENT.Capacity		= (0.5*45/*Ah*/*12/*V*/)/*Wh*/*60/*Wm*/*60/*Ws (J)*/ -- 45Ah @ 12V = 1.728MJ (480Wh) E = ½QV
+ENT.Bandwidth		= 350/*A*/ * 12/*V*/
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 

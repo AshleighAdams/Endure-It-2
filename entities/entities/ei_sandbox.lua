@@ -262,7 +262,10 @@ function ENT:Think()
 		return
 	end
 	
-	--print(CurTime())
+	if not self:GetJoules(200/66) then
+		self:NextThink(CurTime() + 0.1)
+		return true
+	end
 	
 	debug.sethook(function()
 		error("quota exceeded")
@@ -278,7 +281,7 @@ function ENT:Think()
 		self.Owner:ChatPrint(ret)
 		self.Crashed = true
 	elseif ret then
-		self:NextThink(ret)
+		self:NextThink(CurTime() + ret)
 		return true
 	end
 	
@@ -307,7 +310,6 @@ function ENT:Sandboxed_CreateLink(name)
 	link.Meta = {
 		__index = function(tbl, k)
 			--print("index: " .. k)
-			print(k)
 			local tbl2
 			
 			if IsValid(link.Entity) then

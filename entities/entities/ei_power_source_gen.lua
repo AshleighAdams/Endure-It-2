@@ -12,7 +12,7 @@ ENT.Model 			= "models/items/car_battery01.mdl"
 ENT.Yeild			= 10
 ENT.EndPoint 		= true
 
-ENT.Spawnable			= true
+ENT.Spawnable			= false
 ENT.AdminSpawnable		= false
 
 

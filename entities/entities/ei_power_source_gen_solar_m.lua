@@ -8,7 +8,7 @@ ENT.Instructions	= ""
 ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_power_source"
-ENT.Model 			= "models/ce_ls3additional/solar_generator/solar_generator_huge.mdl"
+ENT.Model 			= "models/ce_ls3additional/solar_generator/solar_generator_large.mdl"
 ENT.Yeild			= 0
 ENT.EndPoint 		= true
 ENT.Capacity = ENT.Yeild
@@ -40,7 +40,7 @@ function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	
 	local max = self:OBBMaxs()
-	self.Yeild = (max.x * max.y * 2) / 621 * (12 / 60 / 60) -- 12Wh per square foot
+	self.Yeild = (max.x * max.y * 2) / 621 * (12) -- 12Wh per square foot
 	
 	self.Capacity = self.Yeild
 	self.Bandwidth = self.Yeild
