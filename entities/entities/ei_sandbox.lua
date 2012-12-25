@@ -11,7 +11,7 @@ ENT.RenderGroup 		= RENDERGROUP_OPAQUE
 ENT.Base				= "base_gmodentity"
 
 ENT.Model				= "models/cheeze/wires/cpu2.mdl"
-ENT.Quota 				= 1000000
+ENT.Quota 				= 10000
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
@@ -204,9 +204,9 @@ function ENT:Setup(code, name)
 		},
 		table = {
 			insert = table.insert, maxn = table.maxn, remove = table.remove, 
-			sort = table.sort
+			sort = table.sort, HasValue = table.HasValue, Count = table.Count
 		},
-		math = { 
+		math = { --table.Copy(math)
 			abs = math.abs, acos = math.acos, asin = math.asin, 
 			atan = math.atan, atan2 = math.atan2, ceil = math.ceil, cos = math.cos, 
 			cosh = math.cosh, deg = math.deg, exp = math.exp, floor = math.floor, 
@@ -214,7 +214,8 @@ function ENT:Setup(code, name)
 			ldexp = math.ldexp, log = math.log, log10 = math.log10, max = math.max, 
 			min = math.min, modf = math.modf, pi = math.pi, pow = math.pow, 
 			rad = math.rad, random = math.random, sin = math.sin, sinh = math.sinh, 
-			sqrt = math.sqrt, tan = math.tan, tanh = math.tanh 
+			sqrt = math.sqrt, tan = math.tan, tanh = math.tanh,
+			Round = math.Round
 		},
 		os = { clock = os.clock, difftime = os.difftime, time = os.time },
 		bit = {
@@ -226,7 +227,8 @@ function ENT:Setup(code, name)
 		},
 		// Garry's Mod functions
 		print = print, PrintTable = PrintTable, // DANGER
-		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector, Color = Color
+		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector, Color = Color,
+		LerpAngle = LerpAngle, LerpVector = LerpVector
 	}
 	
 	self.Enviroment["_G"] = self.Enviroment
@@ -239,10 +241,16 @@ function ENT:Setup(code, name)
 	debug.setfenv(func, self.Enviroment) -- make sure the Lua script can't touch any of the things it's not "supposed" to
 	
 	// Prevent them from crashing the server
+	local count = 0
 	debug.sethook(function()
-		error("quota exceeded", 2)
-		self.Crashed = true
-	end, "", self.Quota)
+		count = count + 1
+		
+		if count > self.Quota then
+			self.Crashed = true
+			debug.sethook()
+			error("quota exceeded", 2)
+		end
+	end, "l", self.Quota)
 	
 	local x, err = pcall(func)
 	
@@ -267,10 +275,16 @@ function ENT:Think()
 		return true
 	end
 	
+	local count = 0
 	debug.sethook(function()
-		error("quota exceeded")
-		self.Crashed = true
-	end, "", self.Quota)
+		count = count + 1
+		
+		if count > self.Quota then
+			self.Crashed = true
+			debug.sethook()
+			error("quota exceeded", 2)
+		end
+	end, "l", self.Quota)
 	
 	local x, ret = pcall(self.Enviroment.Think)
 	

@@ -247,14 +247,14 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		Capacity = function(self)
-			return self.Capacity
+		Capacity = function(chip)
+			return self.Capacity or 0
 		end,
-		Bandwidth = function(self)
-			return self.Bandwidth
+		Bandwidth = function(chip)
+			return self.Bandwidth or 0
 		end,
-		Charge = function(self)
-			return self.Joules
+		Charge = function(chip)
+			return self.Joules or 0
 		end
 	}
 end

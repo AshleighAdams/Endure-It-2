@@ -15,12 +15,12 @@ ENT.AdminSpawnable		= false
 
 if CLIENT then
 surface.CreateFont( "EI_Console", {
-	font 		= "Arial",
+	font 		= "lucida console",
 	size 		= 10, -- TODO: Get size later
 	weight 		= 500,
 	blursize 	= 0,
-	scanlines 	= 0,
-	antialias 	= true,
+	scanlines 	= false,
+	antialias 	= false,
 	underline 	= false,
 	italic 		= false,
 	strikeout 	= false,
@@ -37,7 +37,8 @@ function ENT:Initialize()
 	
 	if CLIENT then
 		self.ToDo = {}
-		self.RT = GetRenderTarget("EI_GPU_RT_512_" .. self:EntIndex(), 512, 512)
+		self.RT = GetRenderTargetEx("EI_GPU_RT_512_" .. self:EntIndex(), 512, 512,
+			0 /*index*/, 0/*sizemode*/, 1/*text flags*/, 0/*rtflags*/, 0/*image format*/)
 		render.ClearRenderTarget(self.RT, Color(0, 0, 0, 255))
 	end
 end
@@ -51,32 +52,36 @@ if CLIENT then
 	})
 end
 
+if SERVER then
+	util.AddNetworkString("Console_DrawText")
+	util.AddNetworkString("Console_Clear")
+end
+
 if CLIENT then
-	function Console_DrawText( um )
-		local self = um:ReadEntity()
-		local str = um:ReadString()
-		local x = um:ReadShort()
-		local y = um:ReadShort()
-		local col = um:ReadVector()
-		col = Color(col.x, col.y, col.z)
-		
-		local bgcol = um:ReadVector()
-		bgcol = Color(bgcol.x, bgcol.y, bgcol.z)
+	function Console_DrawText()
+		local self = net.ReadEntity()
+		local str = net.ReadString()
+		local x = net.ReadUInt(8)
+		local y = net.ReadUInt(8)
+		local col = Color(net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8))
+		local bgcol = Color(net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8))
 		
 		self.ToDo = self.ToDo or {}
 		table.insert(self.ToDo,{What=str, Col = col, BGCol = bgcol, X = x,Y = y})
 	end
-	usermessage.Hook("Console_DrawText", Console_DrawText)
+	net.Receive("Console_DrawText", Console_DrawText)
 	
-	function Console_Clear( um )
-		local self = um:ReadEntity()
+	function Console_Clear()
+		local self = net.ReadEntity()
+		local col = Color(net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8))
 		
-		render.ClearRenderTarget(self.RT, Color(0, 0, 0, 255))
+		self.ToDo = {}
+		render.ClearRenderTarget(self.RT, col)
 	end
-	usermessage.Hook("Console_Clear", Console_Clear)
+	net.Receive("Console_Clear", Console_Clear)
 end
 
-function ENT:Draw()
+function ENT:DrawTranslucent()
 	self.ToDo = self.ToDo or {}
 	local sw = ScrW()
 	local sh = ScrH()
@@ -91,7 +96,8 @@ function ENT:Draw()
 			surface.SetFont("EI_Console")
 			
 			for k,v in pairs(self.ToDo) do
-				surface.SetDrawColor(v.Col.r, v.Col.g, v.Col.b, 255)
+				surface.SetTextColor(v.Col.r, v.Col.g, v.Col.b, v.Col.a)
+				
 				local str = v.What
 				local len = string.len(v.What)
 				local x,y = v.X * factor, v.Y * factor
@@ -102,7 +108,7 @@ function ENT:Draw()
 				for i = 1, len do
 					local c = str[i]
 					
-					surface.SetDrawColor(v.BGCol.r, v.BGCol.g, v.BGCol.b, 255)
+					surface.SetDrawColor(v.BGCol.r, v.BGCol.g, v.BGCol.b, v.BGCol.a)
 					surface.DrawRect(x, y, factor, factor)
 					
 					local w,h = surface.GetTextSize("H")
@@ -151,23 +157,37 @@ end
 function ENT:GetLinkTable()
 	return {
 		Draw = function(chip, what, x, y, col, bgcol)
-			if not chip:GetWatts(0.5) then return end
-			umsg.Start( "Console_DrawText" )
-				umsg.Entity(self)
-				umsg.String(what)
-				umsg.Short(x)
-				umsg.Short(y)
-				umsg.Vector(Vector(col.r, col.g, col.b))
-				umsg.Vector(Vector(bgcol.r, bgcol.g, bgcol.b))
-			umsg.End()
+			if not chip:GetJoules(2) then return end
+			bgcol = bgcol or Color(0, 0, 0, 0)
+			col = col or Color(255, 255, 255, 255)
+			
+			net.Start("Console_DrawText")
+				net.WriteEntity(self)
+				net.WriteString(what)
+				net.WriteUInt(x, 8)
+				net.WriteUInt(y, 8)
+				net.WriteUInt(col.r, 8)
+				net.WriteUInt(col.g, 8)
+				net.WriteUInt(col.b, 8)
+				net.WriteUInt(col.a, 8)
+				net.WriteUInt(bgcol.r, 8)
+				net.WriteUInt(bgcol.g, 8)
+				net.WriteUInt(bgcol.b, 8)
+				net.WriteUInt(bgcol.a, 8)
+			net.Broadcast()
 			
 		end,
-		Clear = function(chip)
-			if not chip:GetWatts(0.5) then return end
+		Clear = function(chip, col)
+			if not chip:GetJoules(2) then return end
+			col = col or Color(0, 0, 0, 255)
 			
-			umsg.Start( "Console_Clear" )
-				umsg.Entity(self)
-			umsg.End()
+			net.Start("Console_Clear")
+				net.WriteEntity(self)
+				net.WriteUInt(col.r, 8)
+				net.WriteUInt(col.g, 8)
+				net.WriteUInt(col.b, 8)
+				net.WriteUInt(col.a, 8)
+			net.Broadcast()
 		end
 	}
 end
