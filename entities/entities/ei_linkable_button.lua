@@ -19,8 +19,9 @@ ENT.DownCount 			= 0
 
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
-	
-	self:SetUseType(ONOFF_USE)
+	if SERVER then
+		self:SetUseType(ONOFF_USE)
+	end
 end
 
 function ENT:GetOn()

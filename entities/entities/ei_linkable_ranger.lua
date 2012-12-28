@@ -76,7 +76,6 @@ function ENT:GetLinkTable()
 					rand = 0
 				end
 				
-				print(rand)
 				v.Counts = v.Counts + rand
 				
 				if rand >= 1 then

@@ -11,7 +11,7 @@ ENT.RenderGroup 		= RENDERGROUP_OPAQUE
 ENT.Base				= "base_gmodentity"
 
 ENT.Model				= "models/cheeze/wires/cpu2.mdl"
-ENT.Quota 				= 10000
+ENT.Quota 				= 1000000
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 

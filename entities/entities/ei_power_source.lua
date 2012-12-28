@@ -255,6 +255,9 @@ function ENT:GetLinkTable()
 		end,
 		Charge = function(chip)
 			return self.Joules or 0
+		end,
+		MaxDraw = function(chip)
+			return self:MaxJoule()
 		end
 	}
 end
