@@ -12,6 +12,7 @@ ENT.Base				= "base_gmodentity"
 
 ENT.Model				= "models/cheeze/wires/cpu2.mdl"
 ENT.Quota 				= 1000000
+ENT.MemoryQuota			= 64*1024 -- 64KB * 1024 = 64MB
 
 AccessorFunc( ENT, "m_ShouldRemove", "ShouldRemove" )
 
@@ -111,6 +112,7 @@ end
 function ENT:Reset()
 	self:SetColor(Color(255, 255, 255))
 	self.Enviroment = {}
+	self.MemoryCount = 0
 	self.Crashed = false
 end
 
@@ -252,9 +254,21 @@ function ENT:Setup(code, name)
 		end
 	end, "l", self.Quota)
 	
+	collectgarbage("stop")
+	local memcount = collectgarbage("count")
+	
 	local x, err = pcall(func)
 	
+	self.MemoryCount = self.MemoryCount + (collectgarbage("count") - memcount)
+	collectgarbage("restart")
+	
 	debug.sethook()
+	
+	
+	if self.MemoryCount > self.MemoryQuota then
+		self.Crashed = true
+		error("memory usage exceeded", 2)
+	end
 	
 	if not x then
 		self:SetColor(Color(255, 0, 0))
@@ -286,9 +300,21 @@ function ENT:Think()
 		end
 	end, "l", self.Quota)
 	
+	collectgarbage("stop")
+	local memcount = collectgarbage("count")
+	
 	local x, ret = pcall(self.Enviroment.Think)
 	
+	self.MemoryCount = self.MemoryCount + (collectgarbage("count") - memcount)
+	collectgarbage("restart")
+	
 	debug.sethook()
+	
+	if self.MemoryCount > self.MemoryQuota then
+		self.Crashed = true
+		error("memory usage exceeded", 2)
+	end
+	
 	
 	if not x then
 		self:SetColor(Color(255, 0, 0))
