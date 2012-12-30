@@ -136,7 +136,7 @@ function ENT:DrawTranslucent()
 	
 	local scale = 5.5
 	
-	cam.Start3D2D(self:GetPos() + self:GetAngles():Up() * 0.25, self:GetAngles(), 1)
+	cam.Start3D2D(self:GetPos() + self:GetAngles():Up() * 0.5, self:GetAngles(), 1)
 		surface.SetDrawColor(255, 255, 255, 255)
 		surface.SetMaterial(self.ScreenMat)
 		surface.DrawTexturedRect(-256 / scale / 2, -256 / scale / 2, 256 / scale, 256 / scale)

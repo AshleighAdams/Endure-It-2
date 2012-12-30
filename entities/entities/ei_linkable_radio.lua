@@ -3,6 +3,8 @@ AddCSLuaFile()
 -- models/props_spytech/radar_top002.mdl
 -- models/props_lab/citizenradio.mdl
 
+-- models/props_rooftop/Roof_Dish001.mdl  Sat dish
+
 ENT.PrintName		= "Radio"
 ENT.Author			= "C0BRA"
 ENT.Contact			= "c0bra@xiatek.org"
@@ -12,11 +14,28 @@ ENT.RenderGroup 	= RENDERGROUP_OPAQUE
 
 ENT.Base 			= "ei_linkable_ent"
 
-ENT.Model 			= "models/bull/various/gyroscope.mdl"
+ENT.Model 			= "models/props_lab/citizenradio.mdl"
 
 ENT.Spawnable			= true
 ENT.AdminSpawnable		= false
 ENT.EI_Radio 			= true
+
+EI_Radio_Devices = EI_Radio_Devices or {}
+EI_Radio_Devices_Count = EI_Radio_Devices_Count or 0
+EI_Radio_Devices_ThinkCount = EI_Radio_Devices_ThinkCount or 0
+
+function EI_Radio_Devices_Think()
+	if CLIENT then return end
+	
+	EI_Radio_Devices_ThinkCount = EI_Radio_Devices_ThinkCount + 1
+	
+	if EI_Radio_Devices_ThinkCount < EI_Radio_Devices_Count then return end
+	EI_Radio_Devices_ThinkCount = 0
+	
+	for k,v in pairs(EI_Radio_Devices) do
+		k:PostThink()
+	end
+end
 
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
@@ -26,6 +45,10 @@ function ENT:Initialize()
 	
 	self.Bits = {}
 	self.Queue = {}
+	self.SendQueue = {}
+	
+	EI_Radio_Devices[self] = true
+	EI_Radio_Devices_Count = EI_Radio_Devices_Count - 1
 end
 
 function ENT:GetPowerOutput()
@@ -33,13 +56,13 @@ function ENT:GetPowerOutput()
 end
 
 function ENT:Transmit(val)
-	val = math.Round(math.Clamp(val, 0, 255))
+	local c = #self.SendQueue
 	
-	for k,v in pairs(ents.GetAll()) do
-		if v.EI_Radio and v.Receive and v != self then
-			v:Receive(self, val)
-		end
+	if c > 64 then
+		return error("Send queue is full!", 3)
 	end
+	
+	table.insert(self.SendQueue, val)
 end
 
 function ENT:Receive(from, val)
@@ -56,15 +79,35 @@ function ENT:Receive(from, val)
 		local x = bit.rshift(bit.band(comp, val), i)
 		
 		x = x * factor
-		local err = x * 0.05 -- 5%, 10% when inc. negative
+		local err = x * 0.1
 		
-		self.Bits[i+1] = (self.Bits[i+1] or 0) + x + math.Rand(-err, err)
+		self.Bits[i+1] = (self.Bits[i+1] or 0) + x + math.Rand(0, err)
 	end
 end
 
 function ENT:Think()
 	self.BaseClass.Think(self)
 	
+	local val = self.SendQueue[1]
+	
+	if val then
+		table.remove(self.SendQueue, 1)
+		
+		val = math.Round(math.Clamp(val, 0, 255))
+		for k,v in pairs(ents.GetAll()) do
+			if v.EI_Radio and v.Receive and v != self then
+				v:Receive(self, val)
+			end
+		end
+	end
+	
+	EI_Radio_Devices_Think()
+	
+	self:NextThink(CurTime())
+	return true
+end
+
+function ENT:PostThink() -- This is done after making sure every other radio device has thaught	
 	-- Introduce some random noise & calculate max
 	local max = 0
 	for i = 0, 8 do
@@ -91,16 +134,14 @@ function ENT:Think()
 		end
 		
 		table.insert(self.Queue, {Value = val, Intensity = max})
-		
 	end
+	
+	
 	
 	-- Reset
 	for i = 0, 8 do
 		self.Bits[i+1] = 0
 	end
-	
-	self:NextThink(CurTime())
-	return true
 end
 
 function ENT:GetLinkTable()
@@ -111,8 +152,11 @@ function ENT:GetLinkTable()
 		SetOutputPower = function(chip, pwr)
 			self.OutputPower = pwr
 		end,
+		SetSquelch = function(chip, x)
+			self.Squelch = x
+		end,
 		WriteByte = function(chip, val)
-			if not chip:GetJoules(self.OutputPower * 1/66) then return end
+			if not chip:GetJoules(self.OutputPower * 1) then return end
 			self:Transmit(val)
 		end,
 		ReadByte = function(chip)
@@ -121,13 +165,18 @@ function ENT:GetLinkTable()
 			if not ret then return end
 			return ret.Value, ret.Intensity
 		end,
-		HasData = function(chip)
-			return (#self.Queue) > 1
+		HasData = function(chip, x)
+			return (#self.Queue) > (x or 1)
+		end,
+		SendQueueSize = function(chip)
+			return (#self.SendQueue)
 		end
 	}
 end
 
 function ENT:OnRemove()
+	EI_Radio_Devices[self] = nil
+	EI_Radio_Devices_Count = EI_Radio_Devices_Count - 1
 end
 
 

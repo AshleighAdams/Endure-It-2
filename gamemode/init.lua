@@ -19,3 +19,7 @@ function GM:PlayerLoadout(pl)
 	pl:Give("weapon_physgun")
 	pl:Give("gmod_tool")
 end
+
+function GM:Think()
+	hook.Call("ThinkGM")
+end
