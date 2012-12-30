@@ -146,9 +146,10 @@ function ENT:PostEntityPaste(pl, ent, CreatedEntities)
 	if not tbl then return end
 	
 	self:Setup(tbl.Code or "error('empty code')", tbl.CodeName)
-	
+		
 	for k,v in pairs(tbl.Links) do
-		self:Sandboxed_CreateLink(k).Entity = CreatedEntities[v]
+		self:Sandboxed_CreateLink(k)
+		self.Links[k].Entity = CreatedEntities[v]
 	end
 	
 	for k,v in pairs(tbl.PowerSources) do
@@ -280,9 +281,9 @@ function ENT:Setup(code, name)
 	debug.sethook()
 	
 	
-	if self.MemoryCount > self.MemoryQuota then
-		self.Crashed = true
-		error("memory usage exceeded", 2)
+	if self.MemoryCount > self.MemoryQuota then -- The memory is often freed outside of here so this is tmp disabled.
+		//self.Crashed = true
+		//error("memory usage exceeded", 2)
 	end
 	
 	if not x then
@@ -292,14 +293,19 @@ function ENT:Setup(code, name)
 end
 
 function ENT:Think()
-	if self.Crashed then return end
 	if CLIENT then return end
 	
-	if not self.Enviroment.Think then
-		return
+	if self.Crashed then
+		self:NextThink(CurTime() + 1)
+		return true
 	end
 	
-	if not self:GetJoules(200/66) then
+	if not self.Enviroment.Think then
+		self:NextThink(CurTime() + 1)
+		return true
+	end
+	
+	if not self:GetJoules(100/66) then
 		self:NextThink(CurTime() + 0.1)
 		return true
 	end
@@ -326,8 +332,8 @@ function ENT:Think()
 	debug.sethook()
 	
 	if self.MemoryCount > self.MemoryQuota then
-		self.Crashed = true
-		error("memory usage exceeded", 2)
+		--self.Crashed = true
+		--error("memory usage exceeded", 2)
 	end
 	
 	
@@ -351,6 +357,10 @@ function ENT:Sandboxed_GetLink(name)
 		return error("Can't find the link `" .. name .. "'", 2)
 	end
 	
+	if not lo.Meta.__index then
+		return error("Can't find the meta table for link `" .. name .. "'", 2)
+	end
+	
 	local ret = {}
 	setmetatable(ret, lo.Meta)
 	
@@ -358,10 +368,10 @@ function ENT:Sandboxed_GetLink(name)
 end
 
 function ENT:Sandboxed_CreateLink(name)
-	if self.Links[name] != nil then return self.Links[name] end -- this link has already been made
+	if self.Links[name] != nil then return self:Sandboxed_GetLink(name) end -- this link has already been made
 	
 	local link = {Name = name, Entity = nil}
-	
+		
 	link.Meta = {
 		__index = function(tbl, k)
 			--print("index: " .. k)
@@ -372,6 +382,7 @@ function ENT:Sandboxed_CreateLink(name)
 			end
 			
 			if k == "Connected" then
+				--print(link.Entity)
 				return IsValid(link.Entity)
 			elseif tbl2 != nil and type(rawget(tbl2, k)) == "function" then
 				if not IsValid(link.Entity) then return nil end

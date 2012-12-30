@@ -27,15 +27,33 @@ end
 
 function ENT:Think()
 	self.BaseClass.Think( self )
-
 end
 
 function ENT:OnTakeDamage( dmginfo )
 end
 
+local DensityTbl = {}
+DensityTbl[MAT_ANTLION] = 0.01
+DensityTbl[MAT_BLOODYFLESH] = 0.01
+DensityTbl[MAT_DIRT] = 1.51
+DensityTbl[MAT_FLESH] = 0.01
+DensityTbl[MAT_GRATE] = 8.6
+DensityTbl[MAT_ALIENFLESH] = 0.01
+DensityTbl[MAT_CLIP] = 8.6
+DensityTbl[MAT_PLASTIC] = 0.8
+DensityTbl[MAT_METAL] = 8.6
+DensityTbl[MAT_SAND] = 2.65
+DensityTbl[MAT_FOLIAGE] = 0.2
+DensityTbl[MAT_COMPUTER] = 0.9
+DensityTbl[MAT_SLOSH] = 0
+DensityTbl[MAT_TILE] = 12.2
+DensityTbl[MAT_VENT] = 8.6
+DensityTbl[MAT_WOOD] = 0.63
+DensityTbl[MAT_GLASS] =  4.35
+
 function ENT:GetLinkTable()
 	return {
-		Query = function(chip, x, y, onlymetal)
+		Query = function(chip, x, y)
 			if not chip:GetJoules(4) then return 1000000 end
 			
 			x = x or 0
@@ -54,7 +72,7 @@ function ENT:GetLinkTable()
 			trace.filter = { self }
 			local tr = util.TraceLine(trace)
 			
-			if tr.HitSky or (tr.HitWorld and onlymetal) then
+			if tr.HitSky then
 				debugoverlay.Line(trace.start, tr.HitPos, 0.25)
 				return 1000000
 			end
@@ -89,7 +107,9 @@ function ENT:GetLinkTable()
 			
 			debugoverlay.Line(trace.start, tr.HitPos, 0.25)
 			
-			return (trace.start - tr.HitPos):Length()
+			local density = DensityTbl[tr.MatType]
+			
+			return (trace.start - tr.HitPos):Length(), density
 		end
 	}
 end

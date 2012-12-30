@@ -141,6 +141,9 @@ function ENT:GetLinkTable()
 	return {
 		GetValue = function()
 			return self:GetVal()
+		end,
+		SetValue = function(chip, val)
+			return self:SetVal(val)
 		end
 	}
 end

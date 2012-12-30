@@ -98,6 +98,9 @@ function ENT:Think()
 	for i = 0, 8 do
 		self.Bits[i+1] = 0
 	end
+	
+	self:NextThink(CurTime())
+	return true
 end
 
 function ENT:GetLinkTable()
@@ -109,7 +112,7 @@ function ENT:GetLinkTable()
 			self.OutputPower = pwr
 		end,
 		WriteByte = function(chip, val)
-			if not chip:GetJoules(self.OutputPower) then return end
+			if not chip:GetJoules(self.OutputPower * 1/66) then return end
 			self:Transmit(val)
 		end,
 		ReadByte = function(chip)
