@@ -181,6 +181,21 @@ function ENT:Setup(code, name)
 		return
 	end
 	
+	local function fake_print(...)
+		local pl = self:GetOwner()
+		
+		if not IsValid(pl) then return end
+		
+		local args = {...}
+		local str = ""
+		
+		for k,v in pairs(args) do
+			v = v .. " " .. tostring(v)
+		end
+		
+		pl:ChatPrint(v)
+	end
+	
 	self.Enviroment = {
 		ipairs = ipairs,
 		next = next,
@@ -228,7 +243,7 @@ function ENT:Setup(code, name)
 			bswap = bit.bswap
 		},
 		// Garry's Mod functions
-		print = print, PrintTable = PrintTable, // DANGER
+		print = fake_print, PrintTable = PrintTable, // DANGER
 		CurTime = CurTime, RealTime = RealTime, Angle = Angle, Vector = Vector, Color = Color,
 		LerpAngle = LerpAngle, LerpVector = LerpVector
 	}
