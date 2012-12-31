@@ -105,11 +105,11 @@ local Earth		 = Planet("Earth")
 Earth.Position	 = Vector(-9727, -6144, -8162)
 Earth.Radius	 = 4812
 
-local Moon		 = Planet("Moon")
-Moon.Position	 = Vector(0, 0, 4580)
-Moon.Radius		 = 1122
-Moon.Temperature = -5
-Moon.Gravity	 = math.Round(9.8 / 6 / 0.01633333333)
+local Mercury		 = Planet("Mercury")
+Mercury.Position	 = Vector(0, 0, 4580)
+Mercury.Radius		 = 1122
+Mercury.Temperature	 = 630
+Mercury.Gravity		 = math.Round(3.7 / 0.01633333333)
 
 local Mars		 = Planet("Mars")
 Mars.Position	 = Vector(1514, 7663, -10236)
