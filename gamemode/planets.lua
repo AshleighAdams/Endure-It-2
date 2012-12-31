@@ -105,9 +105,27 @@ local Earth		 = Planet("Earth")
 Earth.Position	 = Vector(-9727, -6144, -8162)
 Earth.Radius	 = 4812
 
+local Moon		 = Planet("Moon")
+Moon.Position	 = Vector(0, 0, 4580)
+Moon.Radius		 = 1122
+Moon.Temperature = -5
+Moon.Gravity	 = math.Round(9.8 / 6 / 0.01633333333)
+
 local Mars		 = Planet("Mars")
 Mars.Position	 = Vector(1514, 7663, -10236)
 Mars.Temperature = -55
 Mars.Radius	 	 = 3060
+Mars.Gravity	 = math.Round(3.711 / 0.01633333333)
 
+local Venus		 = Planet("Venus")
+Venus.Position	 = Vector(8192, -10240, -2128)
+Venus.Temperature = 462
+Venus.Radius	 = 4860
+Venus.Gravity	 = math.Round(8.87 / 0.01633333333)
+
+local Saturn		 = Planet("Venus")
+Saturn.Position		 = Vector(-8192, 8703, 10104)
+Saturn.Temperature	 = -150
+Saturn.Radius		 = 3316
+Saturn.Gravity		 = math.Round(10.44 / 0.01633333333)
 
