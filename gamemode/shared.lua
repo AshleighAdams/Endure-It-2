@@ -21,6 +21,6 @@ function GM:Move(pl, data)
 	pl:SetVelocity(Vector(0, 0, -pl.CurrentPlanet.Gravity))
 end
 
-function GM:Think()
+function GM:Tick()
 	Space:Think()
 end

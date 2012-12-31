@@ -8,13 +8,14 @@ BasePlanet.Name = "Earth"
 BasePlanet.Gravity = math.Round(9.8 / 0.01633333333)
 BasePlanet.Position = Vector(0, 0, 0)
 BasePlanet.Radius = 10000
+BasePlanet.Temperature = 20
 BasePlanet.Atmosphere = {
 	O2 = 20.946, N2 = 78.084, Ar = 0.9340, CO2 = 0.035, Ne = 0.001818,
 	He = 0.00524, CH4 = 0.0001745, Kr = 0.000114, H2 = 0.000055
 }
 
 function Planet(name)
-	local planet = {}
+	local planet = {Name = name}
 	Space.Planets[name] = planet
 	
 	return setmetatable(planet, {__index = BasePlanet})
@@ -22,8 +23,7 @@ end
 
 function Space:Spacify(ent)
 	if not IsValid(ent) then return end
-	print("Spacify", ent)
-	
+	print("s", ent)
 	if CLIENT then return end
 	
 	ent:SetGravity(0)
@@ -38,7 +38,8 @@ end
 
 function Space:Planetify(ent, planet)
 	if not IsValid(ent) then return end
-	print("Planetify", ent)
+	
+	print("p", ent, planet.Gravity)
 	
 	ent:SetGravity(planet.Gravity)
 	
@@ -55,7 +56,7 @@ function Space:Think()
 	self.LastThink = CurTime()
 	
 	for k,v in pairs(ents.GetAll()) do
-		if self.BadClasses[v:GetClass()] then return end
+		if self.BadClasses[v:GetClass()] == true then return end
 		
 		if v.CurrentPlanet then
 			
@@ -67,6 +68,15 @@ function Space:Think()
 				self:Spacify(v)
 				v.CurrentPlanet = nil
 				continue
+			end
+			
+			-- Simulate gravity as it seems to be broken...
+			if not v:IsPlayer() then
+				local po  = v:GetPhysicsObject()
+				
+				if IsValid(po) and not po:IsAsleep() then
+					po:ApplyForceCenter(Vector(0, 0, v.CurrentPlanet.Gravity) * t * po:GetMass() * -1)
+				end
 			end
 			
 		else
@@ -92,5 +102,12 @@ function Space:Think()
 end
 
 local Earth		 = Planet("Earth")
-Earth.Position	 = Vector(-9727.829102, -6144.072754, -8162.713867)
+Earth.Position	 = Vector(-9727, -6144, -8162)
 Earth.Radius	 = 4812
+
+local Mars		 = Planet("Mars")
+Mars.Position	 = Vector(1514, 7663, -10236)
+Mars.Temperature = -55
+Mars.Radius	 	 = 3060
+
+
