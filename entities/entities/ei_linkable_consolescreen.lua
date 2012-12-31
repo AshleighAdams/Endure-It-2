@@ -66,6 +66,8 @@ if CLIENT then
 		local col = Color(net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8))
 		local bgcol = Color(net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(8))
 		
+		if not IsValid(self) then return end
+		
 		self.ToDo = self.ToDo or {}
 		table.insert(self.ToDo,{What=str, Col = col, BGCol = bgcol, X = x,Y = y})
 	end

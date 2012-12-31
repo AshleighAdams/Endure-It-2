@@ -42,6 +42,7 @@ function ENT:Initialize()
 	self.Frequency = 200
 	self.OutputPower = 5 -- 5W
 	self.Squelch = 1
+	self.BandPass = 0.2
 	
 	self.Bits = {}
 	self.Queue = {}
@@ -69,7 +70,7 @@ function ENT:Receive(from, val)
 	val = val + 256
 	
 	local distance = from:GetPos():Distance(self:GetPos())
-	local freq_dist = math.max(math.abs(from.Frequency - self.Frequency) / 0.2)
+	local freq_dist = math.max(math.abs(from.Frequency - self.Frequency) / self.BandPass)
 	local power = from:GetPowerOutput() * 1000
 	
 	local factor = power / distance * math.max(0, 1-freq_dist)
@@ -113,12 +114,14 @@ function ENT:PostThink() -- This is done after making sure every other radio dev
 	-- Introduce some random noise & calculate max
 	local max = 0
 	for i = 0, 8 do
-		self.Bits[i+1] = (self.Bits[i+1] or 0) + math.pow(math.Rand(0, 1), 2)
+		self.Bits[i+1] = (self.Bits[i+1] or 0) + math.Rand(0, self.BandPass * 5)
 		
 		if self.Bits[i+1] > max then
 			max = self.Bits[i+1]
 		end
 	end
+	
+	--print(max, self.Squelch)
 	
 	if max > self.Squelch then
 		
@@ -135,7 +138,7 @@ function ENT:PostThink() -- This is done after making sure every other radio dev
 			val = bit.bor(val, bit.lshift(1, i))
 		end
 		
-		table.insert(self.Queue, {Value = val, Intensity = max})
+		table.insert(self.Queue, {Value = val, Intensity = max, Freq = self.Frequency})
 		
 	end
 	
@@ -158,6 +161,10 @@ function ENT:GetLinkTable()
 		SetSquelch = function(chip, x)
 			self.Squelch = x
 		end,
+		SetBandPass = function(chip, x)
+			x = math.max(0.2, x)
+			self.BandPass = x
+		end,
 		WriteByte = function(chip, val)
 			if not chip:GetJoules(self.OutputPower * 1) then return end
 			self:Transmit(val)
@@ -166,7 +173,7 @@ function ENT:GetLinkTable()
 			local ret = self.Queue[1]
 			table.remove(self.Queue, 1)
 			if not ret then return end
-			return ret.Value, ret.Intensity
+			return ret.Value, ret.Intensity, ret.Freq
 		end,
 		HasData = function(chip, x)
 			return (#self.Queue) >= (x or 1)

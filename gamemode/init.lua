@@ -1,7 +1,10 @@
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
+AddCSLuaFile("planets.lua")
 
 include("shared.lua")
+
+RunConsoleCommand("sv_gravity", 0)
 
 function GM:PlayerSpawn(pl)
     self.BaseClass:PlayerSpawn(pl)
@@ -11,7 +14,6 @@ function GM:PlayerInitialSpawn(pl)
 	self.BaseClass:PlayerInitialSpawn(pl)
 end
 
- 
 function GM:PlayerLoadout(pl)
 	self.BaseClass:PlayerLoadout(pl)
 	
@@ -20,6 +22,3 @@ function GM:PlayerLoadout(pl)
 	pl:Give("gmod_tool")
 end
 
-function GM:Think()
-	hook.Call("ThinkGM")
-end

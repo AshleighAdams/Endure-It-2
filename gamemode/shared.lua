@@ -4,3 +4,23 @@ GM.Email	 = "c0bra@xiatek.org"
 GM.Website	 = "xiatek.org"
 
 DeriveGamemode("sandbox")
+
+include("planets.lua")
+
+local ValidMoveTypes = {
+	[MOVETYPE_WALK] = true,
+	[MOVETYPE_FLYGRAVITY] = true,
+	[MOVETYPE_STEP] = true,
+	[MOVETYPE_WALK] = true,
+}
+
+function GM:Move(pl, data)
+	if not pl.CurrentPlanet then return end
+	if not ValidMoveTypes[pl:GetMoveType()] then return end
+	
+	pl:SetVelocity(Vector(0, 0, -pl.CurrentPlanet.Gravity))
+end
+
+function GM:Think()
+	Space:Think()
+end
