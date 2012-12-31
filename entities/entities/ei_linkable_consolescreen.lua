@@ -104,9 +104,20 @@ function ENT:DrawTranslucent()
 				
 				x = x + factor
 				y = y + factor
-				
+								
 				for i = 1, len do
 					local c = str[i]
+					
+					if c == "\n" then
+						y = y + factor
+						continue
+					elseif c == "\r" then
+						x = 0
+						continue
+					elseif c == "\b" then
+						x = math.max(0, x - factor)
+						continue
+					end
 					
 					surface.SetDrawColor(v.BGCol.r, v.BGCol.g, v.BGCol.b, v.BGCol.a)
 					surface.DrawRect(x, y, factor, factor)

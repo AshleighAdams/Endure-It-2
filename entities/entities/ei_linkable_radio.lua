@@ -69,9 +69,10 @@ function ENT:Receive(from, val)
 	val = val + 256
 	
 	local distance = from:GetPos():Distance(self:GetPos())
+	local freq_dist = math.max(math.abs(from.Frequency - self.Frequency) / 0.2)
 	local power = from:GetPowerOutput() * 1000
 	
-	local factor = power / distance
+	local factor = power / distance * math.max(0, 1-freq_dist)
 	
 	for i = 0, 8 do
 		-- local x = (val & 1 << i) >> i
@@ -94,6 +95,7 @@ function ENT:Think()
 		table.remove(self.SendQueue, 1)
 		
 		val = math.Round(math.Clamp(val, 0, 255))
+		
 		for k,v in pairs(ents.GetAll()) do
 			if v.EI_Radio and v.Receive and v != self then
 				v:Receive(self, val)
@@ -134,9 +136,8 @@ function ENT:PostThink() -- This is done after making sure every other radio dev
 		end
 		
 		table.insert(self.Queue, {Value = val, Intensity = max})
+		
 	end
-	
-	
 	
 	-- Reset
 	for i = 0, 8 do
@@ -146,8 +147,10 @@ end
 
 function ENT:GetLinkTable()
 	return {
-		SetFequency = function(chip, freq)
-			self.Frequency = freq
+		SetFrequency = function(chip, freq)
+			self.Frequency = math.Clamp(freq, 80, 2499.999)
+			
+			return self.Frequency
 		end,
 		SetOutputPower = function(chip, pwr)
 			self.OutputPower = pwr
@@ -166,7 +169,7 @@ function ENT:GetLinkTable()
 			return ret.Value, ret.Intensity
 		end,
 		HasData = function(chip, x)
-			return (#self.Queue) > (x or 1)
+			return (#self.Queue) >= (x or 1)
 		end,
 		SendQueueSize = function(chip)
 			return (#self.SendQueue)

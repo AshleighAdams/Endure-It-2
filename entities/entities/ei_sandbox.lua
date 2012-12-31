@@ -183,18 +183,19 @@ function ENT:Setup(code, name)
 	end
 	
 	local function fake_print(...)
-		local pl = self:GetOwner()
+		local pl = self.Owner
 		
 		if not IsValid(pl) then return end
 		
 		local args = {...}
 		local str = ""
 		
+		local val = ""
 		for k,v in pairs(args) do
-			v = v .. " " .. tostring(v)
+			val = val .. " " .. tostring(v)
 		end
 		
-		pl:ChatPrint(v)
+		pl:ChatPrint(val)
 	end
 	
 	self.Enviroment = {
@@ -218,7 +219,19 @@ function ENT:Setup(code, name)
 			format = string.format, gmatch = string.gmatch, gsub = string.gsub, 
 			len = string.len, lower = string.lower, match = string.match, 
 			rep = string.rep, reverse = string.reverse, sub = string.sub, 
-			upper = string.upper 
+			upper = string.upper, Trim = string.Trim, Right = string.Right,
+			ToMinutesSeconds = string.ToMinutesSeconds, Replace = string.Replace,
+			SetChar = string.SetChar, StartWith = string.StartWith, Left = string.Left,
+			TrimLeft = string.TrimLeft, GetExtensionFromFilename = string.GetExtensionFromFilename,
+			Implode = string.Implode, GetPathFromFilename = string.GetPathFromFilename,
+			Comma = string.Comma, JavascriptSafe = string.JavascriptSafe, 
+			StripExtension = string.StripExtension, FromColor = string.FromColor,
+			GetChar = string.GetChar, EndsWith = string.EndsWith, 
+			NiceSize = string.NiceSize, GetFileFromFilename = string.GetFileFromFilename, 
+			TrimRight = string.TrimRight, NiceTime = string.NiceTime, 
+			ToTable = string.ToTable, Explode = string.Explode, Split = string.Split,
+			ToMinutesSecondsMilliseconds = string.ToMinutesSecondsMilliseconds, 
+			FormattedTime = string.FormattedTime, ToColor = string.ToColor
 		},
 		table = {
 			insert = table.insert, maxn = table.maxn, remove = table.remove, 
