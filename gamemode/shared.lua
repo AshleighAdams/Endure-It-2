@@ -16,6 +16,7 @@ local ValidMoveTypes = {
 
 function GM:Move(pl, data)
 	if not pl.CurrentPlanet then return end
+	if pl:WaterLevel() > 1 then return end
 	if not ValidMoveTypes[pl:GetMoveType()] then return end
 	
 	pl:SetVelocity(Vector(0, 0, -pl.CurrentPlanet.Gravity))

@@ -71,7 +71,7 @@ function Space:Think()
 			end
 			
 			-- Simulate gravity as it seems to be broken...
-			if not v:IsPlayer() then
+			if not v:IsPlayer() and not (v:WaterLevel() > 0) then
 				local po  = v:GetPhysicsObject()
 				
 				if IsValid(po) and not po:IsAsleep() then
@@ -105,6 +105,11 @@ local Earth		 = Planet("Earth")
 Earth.Position	 = Vector(-9727, -6144, -8162)
 Earth.Radius	 = 4812
 
+local Kepler		 = Planet("Kepler")
+Kepler.Position		 = Vector(9728, 9216, 4541)
+Kepler.Radius		 = 4812
+Kepler.Temperature	 = -10
+
 local Mercury		 = Planet("Mercury")
 Mercury.Position	 = Vector(0, 0, 4580)
 Mercury.Radius		 = 1122
@@ -123,7 +128,7 @@ Venus.Temperature = 462
 Venus.Radius	 = 4860
 Venus.Gravity	 = math.Round(8.87 / 0.01633333333)
 
-local Saturn		 = Planet("Venus")
+local Saturn		 = Planet("Saturn")
 Saturn.Position		 = Vector(-8192, 8703, 10104)
 Saturn.Temperature	 = -150
 Saturn.Radius		 = 3316
