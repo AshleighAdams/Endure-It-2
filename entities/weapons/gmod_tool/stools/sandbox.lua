@@ -30,11 +30,53 @@ if SERVER then
 	end)
 end
 
+function ParseCodeFile(f, done_files, parent_file)
+	if done_files[f] then return "" end
+	done_files[f] = true
+	
+	local f_local
+	local contents
+	
+	if parent_file != nil then
+		f_local	= string.GetPathFromFilename(parent_file) .. f
+		contents = file.Read(f_local, "DATA")
+	end
+	
+	if not contents then
+		contents = file.Read(f, "DATA")
+		
+		if not contents then
+			LocalPlayer():ChatPrint("warning: failed to include `" .. f .. "'")
+			return ""
+		end
+	end
+	
+	local start,endp = string.find(contents, "#include \"[%a\\.\\\\\\/_0-9]+\"")
+	
+	while start != nil do
+		local found = string.sub(contents, start, endp)
+		
+		local fname = string.sub(contents, start + string.len("#include '"), endp-1)
+		print("including " .. fname)
+		local fileconts = ParseCodeFile(fname, done_files, f)
+				
+		contents = string.Replace(contents, found, fileconts)
+		
+		if true then break end
+		start,endp = string.find(contents, "#include \"[%a\\.\\\\\\/_0-9]+\"")
+	end
+	
+	return contents
+end
+
 function TOOL:RightClick(trace)
 	if SERVER then return false end
 	
+	if not IsFirstTimePredicted() then return end
+	
 	local f = self:GetClientInfo("file")
-	local code = file.Read(f, "DATA") or ""
+	local code = ParseCodeFile(f, {})
+	
 	
 	net.Start("sandbox_upload")
 		net.WriteString(f)

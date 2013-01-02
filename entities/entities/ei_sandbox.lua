@@ -308,6 +308,12 @@ end
 function ENT:Think()
 	if CLIENT then return end
 	
+	if self.ShouldSendUpdatedLinkTable then
+		self.ShouldSendUpdatedLinkTable = false
+		
+		self:SendUpdatedLinkTable()
+	end
+	
 	if self.Crashed then
 		self:NextThink(CurTime() + 1)
 		return true
@@ -426,15 +432,22 @@ function ENT:Sandboxed_CreateLink(name)
 	
 	self.Links[name] = link
 	
-	self:SendUpdatedLinkTable()
+	self.ShouldSendUpdatedLinkTable = true
 	
 	return self:Sandboxed_GetLink(name)
 end
 
 function ENT:SendUpdatedLinkTable()
+	
+	local tbl = table.Copy(self.Links)
+	
+	for k,v in pairs(tbl) do
+		v.Meta = nil
+	end
+	
 	net.Start("ei_sandbox_links")
 		net.WriteEntity(self)
-		net.WriteTable(self.Links)
+		net.WriteTable(tbl)
 	net.Send(player.GetAll())
 end
 
