@@ -198,22 +198,28 @@ function ENT:Setup(code, name)
 		pl:ChatPrint(val)
 	end
 	
+	local meta_tables = {}
+	
+	local function safe_setmetatable(tbl, meta)
+		if getmetatable(tbl) and meta_tables[tbl] == nil then return error("sandbox error: unsafe setmetatable!", 2) end
+		
+		meta_tables[tbl] = meta
+		setmetatable(tbl, meta)
+	end
+	
+	local function safe_getmetatable(tbl)
+		return meta_tables[tbl]
+	end
+	
 	self.Enviroment = {
-		ipairs = ipairs,
-		next = next,
-		pairs = pairs,
-		pcall = pcall,
-		tonumber = tonumber,
-		tostring = tostring,
-		type = type,
-		unpack = unpack,
-		/* -- I'm not too sure how safe this is, so I'm not exposing it to them.
+		ipairs = ipairs, tonumber = tonumber, next = next, pairs = pairs, 
+		pcall = pcall, tonumber = tonumber, tostring = tostring, type = type,
+		unpack = unpack, setmetatable = safe_setmetatable, getmetatable = safe_getmetatable, 
 		coroutine = {
 			create = coroutine.create, resume = coroutine.resume, 
 			running = coroutine.running, status = coroutine.status, 
-			wrap = coroutine.wrap 
+			wrap = coroutine.wrap, yield = coroutine.yield
 		},
-		*/
 		string = { 
 			byte = string.byte, char = string.char, find = string.find, 
 			format = string.format, gmatch = string.gmatch, gsub = string.gsub, 
@@ -246,7 +252,7 @@ function ENT:Setup(code, name)
 			min = math.min, modf = math.modf, pi = math.pi, pow = math.pow, 
 			rad = math.rad, random = math.random, sin = math.sin, sinh = math.sinh, 
 			sqrt = math.sqrt, tan = math.tan, tanh = math.tanh,
-			Round = math.Round
+			Round = math.Round, Clamp = math.Clamp
 		},
 		os = { clock = os.clock, difftime = os.difftime, time = os.time },
 		bit = {

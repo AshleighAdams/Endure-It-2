@@ -30,7 +30,8 @@ if SERVER then
 	end)
 end
 
-function ParseCodeFile(f, done_files, parent_file)
+
+function ParseCodeFile(f, done_files, parent_file, file_offsets)
 	if done_files[f] then return "" end
 	done_files[f] = true
 	
@@ -53,20 +54,77 @@ function ParseCodeFile(f, done_files, parent_file)
 	
 	local start,endp = string.find(contents, "#include \"[%a\\.\\\\\\/_0-9]+\"")
 	
+	
 	while start != nil do
 		local found = string.sub(contents, start, endp)
 		
 		local fname = string.sub(contents, start + string.len("#include '"), endp-1)
 		print("including " .. fname)
-		local fileconts = ParseCodeFile(fname, done_files, f)
-				
-		contents = string.Replace(contents, found, fileconts)
+		local fileconts = ParseCodeFile(fname, done_files, f, file_offsets)
 		
-		if true then break end
+		// save the positions of the file offsets, when we go into a file, mark it as so, and when we come back out of it, again, mark it as so
+		// this can be used to fix the error messages later on!
+		table.insert(file_offsets, {name = fname, pos = string.len(contents)})
+		contents = string.Replace(contents, found, fileconts)
+		table.insert(file_offsets, {name = (f or "root"), pos = string.len(contents)})
+		
+		-- line below is for testing...
+		-- if true then break end
 		start,endp = string.find(contents, "#include \"[%a\\.\\\\\\/_0-9]+\"")
 	end
 	
 	return contents
+end
+
+local DebugInfo = {}
+
+function GetRelativeErrorPosition(fname, line)
+	if DebugInfo[fname] == nil then
+		return "no debug info for file " .. fname, line
+	end
+	
+	local code, offsets = unpack(DebugInfo[fname])
+	local curline = 0
+	local position = nil
+	
+	for i = 1, string.len(code) do
+		local char = code[i]
+		
+		if char == '\n' then
+			curline = curline + 1
+			
+			if curline == line then
+				position = i
+				break
+			end
+		end
+	end
+	
+	if position == nil then return "nope.avi (EOF)", 0 end
+		
+	local start = nil
+	
+	print(position)
+	PrintTable(offsets)
+	
+	// now we have the position of that line, lets attempt to locate the file it falls under...
+	for k,v in pairs(offsets) do
+		if v.pos > position then
+			break
+		end
+		
+		start = v
+	end
+	
+	// now find out what line pos resides on
+	local newline_count = 0
+	for i = start.pos, position do
+		if code[i] == '\n' then
+			newline_count = newline_count + 1
+		end
+	end
+	
+	return start.name, newline_count
 end
 
 function TOOL:RightClick(trace)
@@ -75,7 +133,12 @@ function TOOL:RightClick(trace)
 	if not IsFirstTimePredicted() then return end
 	
 	local f = self:GetClientInfo("file")
-	local code = ParseCodeFile(f, {})
+	local file_offsets = {}
+	
+	table.insert(file_offsets, {pos = 1, name = f})
+	local code = ParseCodeFile(f, {}, nil, file_offsets)
+	
+	DebugInfo[f] = {code, file_offsets}
 	
 	
 	net.Start("sandbox_upload")
